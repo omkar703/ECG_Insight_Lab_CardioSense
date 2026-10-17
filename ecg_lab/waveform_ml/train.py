@@ -24,15 +24,18 @@ from ecg_lab.waveform_ml.config import (
     VAL_FOLDS,
 )
 from ecg_lab.waveform_ml.dataset import (
+    PatientOverlapError,
     load_ptbxl_metadata,
     validate_split_integrity,
 )
 from ecg_lab.waveform_ml.evaluate import (
     compute_bootstrap_confidence_intervals,
+    compute_patient_cluster_bootstrap_ci,
     evaluate_multilabel_predictions,
     format_ci_markdown_table,
     format_comparison_markdown_table,
     format_metrics_markdown_table,
+    format_pilot_vs_full_fold_comparison_table,
 )
 from ecg_lab.waveform_ml.features import FeatureCacheManager
 from ecg_lab.waveform_ml.models import (
@@ -77,9 +80,17 @@ def run_training_and_evaluation(
         max_records=max_records,
     )
 
-    # 3. Create fold masks matching extracted ecg_ids
-    ecg_id_series = pd.Series(ecg_ids, index=ecg_ids)
+    target_classes = list(TARGET_SUPERCLASSES)
+
+    # 3. Verify that feature rows join to labels by ecg_id explicitly
+    for col_idx, sc in enumerate(target_classes):
+        expected_labels = meta_df.loc[ecg_ids, f"y_{sc}"].values.astype(np.int32)
+        if not np.array_equal(y[:, col_idx], expected_labels):
+            raise ValueError(f"Label alignment violation for superclass {sc} and ecg_ids.")
+
+    # 4. Create fold masks matching extracted ecg_ids
     folds = meta_df.loc[ecg_ids, "strat_fold"].values
+    patient_ids = meta_df.loc[ecg_ids, "patient_id"].values
 
     train_mask = np.isin(folds, TRAIN_FOLDS)
     val_mask = np.isin(folds, VAL_FOLDS)
@@ -89,9 +100,14 @@ def run_training_and_evaluation(
     X_val, y_val = X[val_mask], y[val_mask]
     X_test, y_test = X[test_mask], y[test_mask]
 
-    target_classes = list(TARGET_SUPERCLASSES)
+    train_pts = set(patient_ids[train_mask])
+    val_pts = set(patient_ids[val_mask])
+    test_pts = set(patient_ids[test_mask])
 
-    # 4. Train naive prevalence baseline on training fold
+    if (train_pts & val_pts) or (train_pts & test_pts) or (val_pts & test_pts):
+        raise PatientOverlapError("Patient leakage detected across partition splits.")
+
+    # 5. Train naive prevalence baseline on full training partition (Folds 1-8)
     baseline = PrevalenceBaselineClassifier()
     baseline.fit(X_train, y_train)
 
@@ -101,25 +117,68 @@ def run_training_and_evaluation(
         y_val, base_val_preds, base_val_probs, target_classes
     )
 
-    # 5. Train lightweight One-vs-Rest model on training fold
+    # 6. Train lightweight One-vs-Rest model on full training partition
     model = build_lightweight_pipeline(
         random_seed=random_seed,
         c_param=c_param,
     )
     model.fit(X_train, y_train)
 
-    # 6. Predict on validation fold and tune decision thresholds (FOLD 9 ONLY)
+    # 7. Predict on validation fold and tune decision thresholds (FOLD 9 ONLY)
     val_probs = model.predict_proba(X_val)
     val_thresholds = tune_validation_thresholds(y_val, val_probs)
 
-    # Validation predictions using tuned thresholds
     val_preds_tuned = (val_probs >= val_thresholds).astype(np.int32)
     val_metrics = evaluate_multilabel_predictions(
         y_val, val_preds_tuned, val_probs, target_classes, thresholds=val_thresholds
     )
 
-    # 7. Evaluate on final held-out test fold (FOLD 10) STRICTLY ONCE
-    # Test fold was NOT used for training or threshold tuning
+    # 8. FREEZE MODEL AND CRYPTOGRAPHIC PROVENANCE MANIFEST BEFORE FOLD 10 INFERENCE
+    def _get_git_revision() -> str:
+        try:
+            import subprocess
+            res = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
+            return res.stdout.strip()
+        except Exception:
+            return "UNKNOWN"
+
+    import resource
+    peak_memory_mb = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0)
+
+    train_metadata = {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "random_seed": random_seed,
+        "c_param": c_param,
+        "dataset_name": PHYSIONET_DATASET_NAME,
+        "code_revision": _get_git_revision(),
+        "training_mode": "full_fold",
+        "train_samples": int(len(X_train)),
+        "train_patients": int(len(train_pts)),
+        "val_samples": int(len(X_val)),
+        "val_patients": int(len(val_pts)),
+        "test_samples": int(len(X_test)),
+        "test_patients": int(len(test_pts)),
+        "train_positive_support": {
+            cls_name: int(np.sum(y_train[:, idx])) for idx, cls_name in enumerate(target_classes)
+        },
+        "val_positive_support": {
+            cls_name: int(np.sum(y_val[:, idx])) for idx, cls_name in enumerate(target_classes)
+        },
+        "split_integrity_verified": split_stats["split_integrity_verified"],
+        "peak_rss_mb": peak_memory_mb,
+        "frozen_prior_to_test_evaluation": True,
+    }
+
+    model_path, model_manifest_path = save_trained_model(
+        model=model,
+        thresholds=val_thresholds,
+        target_classes=target_classes,
+        train_metadata=train_metadata,
+        output_dir=out_path,
+    )
+
+    # 9. PREPLANNED FOLD 10 RE-EVALUATION (STRICTLY FROZEN, NO TUNING)
+    # Disclosed: Fold 10 was previously evaluated in Phase 3.1 with a pilot-trained model.
     base_test_probs = baseline.predict_proba(X_test)
     base_test_preds = baseline.predict(X_test)
     base_test_metrics = evaluate_multilabel_predictions(
@@ -132,72 +191,58 @@ def run_training_and_evaluation(
         y_test, test_preds_tuned, test_probs, target_classes, thresholds=val_thresholds
     )
 
-    # 8. Compute bootstrap confidence intervals on test fold (Fold 10)
-    test_ci = compute_bootstrap_confidence_intervals(
+    # Update manifest with test positive support
+    train_metadata["test_positive_support"] = {
+        cls_name: int(np.sum(y_test[:, idx])) for idx, cls_name in enumerate(target_classes)
+    }
+
+    # 10. Patient-Clustered Bootstrap Confidence Intervals (Fold 10)
+    test_patient_ids = patient_ids[test_mask]
+    test_ci = compute_patient_cluster_bootstrap_ci(
         y_test,
         test_preds_tuned,
+        patient_ids=test_patient_ids,
         target_classes=target_classes,
         n_bootstraps=1000,
         random_seed=random_seed,
     )
     ci_table = format_ci_markdown_table(
         test_ci,
-        title=f"95% Bootstrap Confidence Intervals (Fold 10, N={len(X_test)})",
+        title=f"95% Patient-Clustered Bootstrap Confidence Intervals (Fold 10, N={len(X_test):,}, {len(test_pts):,} Patients)",
     )
 
-    # 9. Save model with cryptographic provenance manifest
-    def _get_git_revision() -> str:
+    # 11. Format Comparative Markdown Reports
+    pilot_file = out_path / "pilot_evaluation" / "pilot_metrics.json"
+    pilot_data = None
+    if pilot_file.is_file():
         try:
-            import subprocess
-            res = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
-            return res.stdout.strip()
+            with open(pilot_file, "r", encoding="utf-8") as pf:
+                pilot_data = json.load(pf)
         except Exception:
-            return "UNKNOWN"
+            pilot_data = None
 
-    train_metadata = {
-        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "random_seed": random_seed,
-        "c_param": c_param,
-        "dataset_name": PHYSIONET_DATASET_NAME,
-        "code_revision": _get_git_revision(),
-        "train_samples": int(len(X_train)),
-        "val_samples": int(len(X_val)),
-        "test_samples": int(len(X_test)),
-        "test_patients": int(split_stats["test_patients"]),
-        "train_positive_support": {
-            cls_name: int(np.sum(y_train[:, idx])) for idx, cls_name in enumerate(target_classes)
-        },
-        "test_positive_support": {
-            cls_name: int(np.sum(y_test[:, idx])) for idx, cls_name in enumerate(target_classes)
-        },
-        "split_integrity_verified": split_stats["split_integrity_verified"],
-    }
-
-    model_path, model_manifest_path = save_trained_model(
-        model=model,
-        thresholds=val_thresholds,
-        target_classes=target_classes,
-        train_metadata=train_metadata,
-        output_dir=out_path,
+    pilot_comp_table = format_pilot_vs_full_fold_comparison_table(pilot_data, test_metrics, target_classes)
+    val_table = format_metrics_markdown_table(
+        val_metrics,
+        title=f"Validation Fold 9 Evaluation (Full Cohort, N={len(X_val):,}, {len(val_pts):,} Patients)",
     )
-
-    # 10. Format Markdown reports
-    val_table = format_metrics_markdown_table(val_metrics, title="Validation Fold 9 Evaluation")
     test_table = format_metrics_markdown_table(
         test_metrics,
-        title=f"Held-Out Test Fold 10 Evaluation (Full Cohort, N={len(X_test):,})",
+        title=f"Held-Out Test Fold 10 Re-Evaluation (Full Cohort, N={len(X_test):,}, {len(test_pts):,} Patients)",
     )
     comp_table = format_comparison_markdown_table(base_test_metrics, test_metrics, target_classes)
 
     summary_report = "\n\n".join([
-        "# CardioSense Phase 3 Waveform ML Benchmark Report",
+        "# CardioSense Phase 3.2 Waveform ML Full-Fold Benchmark Report",
         f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
         f"**Dataset:** {PHYSIONET_DATASET_NAME} (100 Hz WFDB)",
         f"**Model:** Logistic Regression (One-vs-Rest, Balanced Class Weights, C={c_param})",
         f"**Features:** 148 deterministic lead & cross-lead statistics (Version {cache_manifest.get('feature_version')})",
-        f"**Split Statistics:** Train: {len(X_train):,} records ({split_stats['train_patients']:,} patients, Folds 1–8) | "
-        f"Validation: {len(X_val):,} records ({split_stats['val_patients']:,} patients, Fold 9) | "
-        f"Test: {len(X_test):,} records ({split_stats['test_patients']:,} patients, Fold 10, strictly held out)",
+        f"**Split Statistics:** Train: {len(X_train):,} records ({len(train_pts):,} patients, Folds 1–8) | "
+        f"Validation: {len(X_val):,} records ({len(val_pts):,} patients, Fold 9) | "
+        f"Test: {len(X_test):,} records ({len(test_pts):,} patients, Fold 10, strictly held out)",
+        f"**Peak Memory Footprint:** {peak_memory_mb:.2f} MiB RSS",
+        pilot_comp_table,
         comp_table,
         val_table,
         test_table,
@@ -216,12 +261,14 @@ def run_training_and_evaluation(
         "manifest_path": str(model_manifest_path),
         "report_path": str(report_path),
         "split_stats": split_stats,
+        "peak_rss_mb": peak_memory_mb,
         "val_thresholds": {cls_name: float(val_thresholds[i]) for i, cls_name in enumerate(target_classes)},
         "baseline_val_metrics": base_val_metrics,
         "baseline_test_metrics": base_test_metrics,
         "model_val_metrics": val_metrics,
         "model_test_metrics": test_metrics,
         "test_bootstrap_ci": test_ci,
+        "pilot_comparison": pilot_data.get("model_test_metrics") if pilot_data else None,
         "summary_markdown": summary_report,
     }
 

@@ -18,6 +18,8 @@ from ecg_lab.waveform_ml.config import (
     TARGET_SUPERCLASSES,
 )
 from ecg_lab.waveform_ml.dataset import (
+    audit_dataset_completeness,
+    download_missing_records,
     download_ptbxl_metadata,
     download_single_record,
     load_ptbxl_metadata,
@@ -121,6 +123,73 @@ def cmd_download_samples(args: argparse.Namespace) -> int:
     return 0 if errors == 0 else 2
 
 
+def cmd_audit_completeness(args: argparse.Namespace) -> int:
+    """Audit actual on-disk WFDB availability for every record by fold."""
+    data_dir = Path(args.data_dir)
+    print(f"[*] Auditing PTB-XL completeness in: {data_dir.resolve()}")
+    try:
+        import pandas as pd
+        df = load_ptbxl_metadata(data_dir)
+        audit_res = audit_dataset_completeness(df, data_dir=data_dir)
+        print("\n--- Partition Fold Completeness Audit ---")
+        print(f"{'Fold':<6} | {'Expected':<10} | {'.hea Present':<14} | {'.dat Present':<14} | {'Complete':<10} | {'Missing':<10} | {'Status'}")
+        print("-" * 88)
+        for fold, f_info in audit_res["folds"].items():
+            status = "[OK] Complete" if f_info["is_complete"] else "[WARN] Incomplete"
+            print(
+                f"Fold {fold:<2} | {f_info['expected_records']:<10} | {f_info['present_hea']:<14} | "
+                f"{f_info['present_dat']:<14} | {f_info['complete_records']:<10} | {f_info['missing_records']:<10} | {status}"
+            )
+        print("-" * 88)
+        print(f"Total Expected: {audit_res['total_expected']}")
+        print(f"Total Complete: {audit_res['total_complete_records']}")
+        print(f"Total Missing:  {audit_res['total_missing_records']}")
+        print(f"All Folds Complete: {audit_res['all_folds_complete']}")
+
+        # Save machine-readable manifest and CSV
+        out_dir = Path(args.output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        manifest_path = out_dir / "dataset_completeness_manifest.json"
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(audit_res, f, indent=2)
+        print(f"\n[SUCCESS] Manifest saved to: {manifest_path}")
+
+        # Save docs CSV
+        csv_path = Path("docs/dataset_completeness_audit.csv")
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        csv_rows = []
+        for fold, f_info in audit_res["folds"].items():
+            csv_rows.append(f_info)
+        pd.DataFrame(csv_rows).to_csv(csv_path, index=False)
+        print(f"[SUCCESS] Audit CSV saved to: {csv_path}")
+
+        return 0
+    except Exception as e:
+        print(f"[ERROR] Completeness audit failed: {e}")
+        return 1
+
+
+def cmd_download_missing(args: argparse.Namespace) -> int:
+    """Download all missing PTB-XL records concurrently."""
+    data_dir = Path(args.data_dir)
+    target_folds = [int(f.strip()) for f in args.folds.split(",")] if args.folds else None
+    print(f"[*] Downloading missing records to {data_dir.resolve()} (target folds: {target_folds or 'all'})...")
+    try:
+        df = load_ptbxl_metadata(data_dir)
+        res = download_missing_records(
+            metadata_df=df,
+            data_dir=data_dir,
+            concurrency=args.concurrency,
+            target_folds=target_folds,
+        )
+        print(f"[SUCCESS] Download completed: {res['downloaded']} downloaded, {res['failed']} failed (attempted {res['attempted']}).")
+        return 0 if res["failed"] == 0 else 2
+    except Exception as e:
+        print(f"[ERROR] Download failed: {e}")
+        return 1
+
+
+
 def cmd_extract_features(args: argparse.Namespace) -> int:
     """Extract features and build/refresh cache."""
     data_dir = Path(args.data_dir)
@@ -212,6 +281,17 @@ def main() -> int:
     sub_tr.add_argument("--force-rebuild-cache", action="store_true", help="Rebuild feature cache")
     sub_tr.add_argument("--max-records", type=int, default=None, help="Limit records for testing")
 
+    # Subcommand: audit-completeness
+    sub_audit = subparsers.add_parser("audit-completeness", help="Audit on-disk WFDB record availability")
+    sub_audit.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Dataset root dir")
+    sub_audit.add_argument("--output-dir", default=str(DEFAULT_ARTIFACT_DIR), help="Artifacts directory")
+
+    # Subcommand: download-missing
+    sub_dl_miss = subparsers.add_parser("download-missing", help="Download all missing PTB-XL records")
+    sub_dl_miss.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Dataset root dir")
+    sub_dl_miss.add_argument("--concurrency", type=int, default=40, help="Async download concurrency")
+    sub_dl_miss.add_argument("--folds", default=None, help="Comma-separated folds to download (e.g. 1,2,3)")
+
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
@@ -223,6 +303,10 @@ def main() -> int:
         return cmd_download_metadata(args)
     elif args.command == "download-samples":
         return cmd_download_samples(args)
+    elif args.command == "audit-completeness":
+        return cmd_audit_completeness(args)
+    elif args.command == "download-missing":
+        return cmd_download_missing(args)
     elif args.command == "extract-features":
         return cmd_extract_features(args)
     elif args.command == "train":

@@ -4,6 +4,7 @@ Handles PTB-XL v1.0.3 100 Hz records and guarantees zero patient overlap across 
 """
 
 import ast
+import asyncio
 import hashlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -426,3 +427,173 @@ def download_single_record(
                     f.write(chunk)
 
     return target_prefix
+
+
+def audit_dataset_completeness(
+    metadata_df: pd.DataFrame,
+    data_dir: Union[str, Path] = DEFAULT_DATA_DIR,
+) -> Dict[str, Any]:
+    """Audit actual on-disk WFDB availability for every record by partition fold.
+
+    Distinguishes metadata rows from actual .hea and .dat file existence on disk.
+    Computes expected, present, missing, corrupt, and complete counts by fold.
+    """
+    path = Path(data_dir)
+    folds_summary: Dict[int, Dict[str, Any]] = {}
+    total_expected = len(metadata_df)
+    total_hea = 0
+    total_dat = 0
+    total_complete = 0
+    total_missing = 0
+
+    for fold in range(1, 11):
+        fold_df = metadata_df[metadata_df["strat_fold"] == fold]
+        exp_count = len(fold_df)
+        hea_count = 0
+        dat_count = 0
+        complete_count = 0
+        missing_records: List[str] = []
+
+        for ecg_id, row in fold_df.iterrows():
+            filename_lr = row.get("filename_lr")
+            if not filename_lr or pd.isna(filename_lr):
+                missing_records.append(f"ecg_id_{ecg_id}_no_filename")
+                continue
+            hea_file = path / f"{filename_lr}.hea"
+            dat_file = path / f"{filename_lr}.dat"
+            has_hea = hea_file.is_file() and hea_file.stat().st_size > 0
+            has_dat = dat_file.is_file() and dat_file.stat().st_size > 0
+
+            if has_hea:
+                hea_count += 1
+            if has_dat:
+                dat_count += 1
+            if has_hea and has_dat:
+                complete_count += 1
+            else:
+                missing_records.append(str(filename_lr))
+
+        total_hea += hea_count
+        total_dat += dat_count
+        total_complete += complete_count
+        missing_count = exp_count - complete_count
+        total_missing += missing_count
+
+        folds_summary[fold] = {
+            "fold": fold,
+            "expected_records": exp_count,
+            "present_hea": hea_count,
+            "present_dat": dat_count,
+            "complete_records": complete_count,
+            "missing_records": missing_count,
+            "is_complete": bool(complete_count == exp_count and exp_count > 0),
+        }
+
+    return {
+        "total_expected": total_expected,
+        "total_hea_present": total_hea,
+        "total_dat_present": total_dat,
+        "total_complete_records": total_complete,
+        "total_missing_records": total_missing,
+        "all_folds_complete": bool(total_missing == 0 and total_expected > 0),
+        "folds": folds_summary,
+    }
+
+
+async def download_missing_records_async(
+    metadata_df: pd.DataFrame,
+    data_dir: Union[str, Path] = DEFAULT_DATA_DIR,
+    base_url: str = PHYSIONET_S3_BASE_URL,
+    concurrency: int = 40,
+    batch_size: int = 500,
+    target_folds: Optional[List[int]] = None,
+) -> Dict[str, Any]:
+    """Download all missing .hea and .dat files concurrently with bounded memory and retries."""
+    import aiohttp
+
+    path = Path(data_dir)
+    target_df = (
+        metadata_df
+        if target_folds is None
+        else metadata_df[metadata_df["strat_fold"].isin(target_folds)]
+    )
+
+    missing_tasks: List[Tuple[str, str, Path]] = []
+    for ecg_id, row in target_df.iterrows():
+        rel = str(row["filename_lr"]).replace("\\", "/")
+        if rel.endswith(".hea") or rel.endswith(".dat"):
+            rel = rel[:-4]
+        for ext in (".hea", ".dat"):
+            fpath = path / f"{rel}{ext}"
+            if not fpath.is_file() or fpath.stat().st_size == 0:
+                missing_tasks.append((rel, ext, fpath))
+
+    if not missing_tasks:
+        return {
+            "attempted": 0,
+            "downloaded": 0,
+            "failed": 0,
+            "message": "All records already present",
+        }
+
+    sem = asyncio.Semaphore(concurrency)
+    conn = aiohttp.TCPConnector(limit=concurrency + 10, ttl_dns_cache=300)
+
+    downloaded = 0
+    failed = 0
+
+    async def _fetch(session: aiohttp.ClientSession, rel: str, ext: str, target_file: Path):
+        nonlocal downloaded, failed
+        async with sem:
+            target_file.parent.mkdir(parents=True, exist_ok=True)
+            tmp_file = target_file.with_name(f"{target_file.name}.tmp")
+            url = f"{base_url}{rel}{ext}"
+            for attempt in range(4):
+                try:
+                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                        if resp.status == 200:
+                            data = await resp.read()
+                            tmp_file.write_bytes(data)
+                            tmp_file.replace(target_file)
+                            downloaded += 1
+                            return
+                        else:
+                            await asyncio.sleep(0.5 * (attempt + 1))
+                except Exception:
+                    await asyncio.sleep(0.5 * (attempt + 1))
+            failed += 1
+
+    async with aiohttp.ClientSession(connector=conn) as session:
+        total = len(missing_tasks)
+        for i in range(0, total, batch_size):
+            chunk = missing_tasks[i : i + batch_size]
+            tasks = [_fetch(session, rel, ext, fpath) for rel, ext, fpath in chunk]
+            await asyncio.gather(*tasks)
+            done = min(i + batch_size, total)
+            print(f"  Progress: {done}/{total} files ({done/total*100:.1f}%) downloaded...")
+
+    return {
+        "attempted": len(missing_tasks),
+        "downloaded": downloaded,
+        "failed": failed,
+    }
+
+
+def download_missing_records(
+    metadata_df: pd.DataFrame,
+    data_dir: Union[str, Path] = DEFAULT_DATA_DIR,
+    base_url: str = PHYSIONET_S3_BASE_URL,
+    concurrency: int = 40,
+    target_folds: Optional[List[int]] = None,
+) -> Dict[str, Any]:
+    """Synchronous entrypoint for downloading missing PTB-XL records."""
+    return asyncio.run(
+        download_missing_records_async(
+            metadata_df=metadata_df,
+            data_dir=data_dir,
+            base_url=base_url,
+            concurrency=concurrency,
+            target_folds=target_folds,
+        )
+    )
+

@@ -160,15 +160,96 @@ def compute_bootstrap_confidence_intervals(
     return ci_results
 
 
+def compute_patient_cluster_bootstrap_ci(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    patient_ids: Union[np.ndarray, List[Any]],
+    target_classes: List[str] = list(TARGET_SUPERCLASSES),
+    n_bootstraps: int = 1000,
+    confidence_level: float = 0.95,
+    random_seed: int = 42,
+) -> Dict[str, Any]:
+    """Calculate patient-clustered bootstrap confidence intervals for per-class and macro F1.
+
+    Samples unique patient IDs with replacement and aggregates all recordings
+    belonging to sampled patients in each bootstrap replication. Properly accounts
+    for intra-patient correlation across repeated ECG recordings.
+    """
+    rng = np.random.RandomState(random_seed)
+    y_true_arr = np.asarray(y_true, dtype=np.int32)
+    y_pred_arr = np.asarray(y_pred, dtype=np.int32)
+    pts_arr = np.asarray(patient_ids)
+
+    unique_patients = np.unique(pts_arr)
+    n_unique_patients = len(unique_patients)
+    alpha = (1.0 - confidence_level) / 2.0
+
+    # Build patient-to-indices lookup for fast cluster retrieval
+    patient_to_indices: Dict[Any, np.ndarray] = {}
+    for idx, p_id in enumerate(pts_arr):
+        if p_id not in patient_to_indices:
+            patient_to_indices[p_id] = []
+        patient_to_indices[p_id].append(idx)
+    for p_id in patient_to_indices:
+        patient_to_indices[p_id] = np.array(patient_to_indices[p_id], dtype=np.int64)
+
+    boot_per_class: Dict[str, List[float]] = {sc: [] for sc in target_classes}
+    boot_macro: List[float] = []
+
+    for _ in range(n_bootstraps):
+        sampled_pts = rng.choice(unique_patients, size=n_unique_patients, replace=True)
+        # Gather all record indices for the sampled patient clusters
+        sampled_indices_list = [patient_to_indices[p] for p in sampled_pts]
+        sampled_indices = np.concatenate(sampled_indices_list)
+
+        yt_boot = y_true_arr[sampled_indices]
+        yp_boot = y_pred_arr[sampled_indices]
+
+        class_f1s = []
+        for c_idx, sc in enumerate(target_classes):
+            f = float(f1_score(yt_boot[:, c_idx], yp_boot[:, c_idx], zero_division=0))
+            boot_per_class[sc].append(f)
+            class_f1s.append(f)
+        boot_macro.append(float(np.mean(class_f1s)))
+
+    ci_results: Dict[str, Any] = {
+        "n_bootstraps": n_bootstraps,
+        "n_unique_patients": int(n_unique_patients),
+        "cluster_type": "patient_cluster",
+        "confidence_level": confidence_level,
+        "macro_f1": {
+            "mean": float(np.mean(boot_macro)),
+            "ci_lower": float(np.percentile(boot_macro, 100.0 * alpha)),
+            "ci_upper": float(np.percentile(boot_macro, 100.0 * (1.0 - alpha))),
+        },
+        "per_class": {},
+    }
+
+    for sc in target_classes:
+        scores = boot_per_class[sc]
+        ci_results["per_class"][sc] = {
+            "mean": float(np.mean(scores)),
+            "ci_lower": float(np.percentile(scores, 100.0 * alpha)),
+            "ci_upper": float(np.percentile(scores, 100.0 * (1.0 - alpha))),
+        }
+
+    return ci_results
+
+
 def format_ci_markdown_table(
     ci_results: Dict[str, Any],
     title: str = "95% Bootstrap Confidence Intervals (Fold 10)",
 ) -> str:
     """Format bootstrap confidence interval results into a clear GitHub Flavored Markdown table."""
+    c_type = ci_results.get("cluster_type", "record_bootstrap")
+    header_info = (
+        f"**Bootstrap Resamples:** {ci_results['n_bootstraps']} ({c_type}, {ci_results.get('n_unique_patients', 'N/A')} patients) | "
+        f"**Macro F1 (95% CI):** {ci_results['macro_f1']['mean']:.4f} "
+        f"[{ci_results['macro_f1']['ci_lower']:.4f}, {ci_results['macro_f1']['ci_upper']:.4f}]"
+    )
     lines = [
         f"### {title}",
-        f"**Bootstrap Resamples:** {ci_results['n_bootstraps']} | **Macro F1 (95% CI):** {ci_results['macro_f1']['mean']:.4f} "
-        f"[{ci_results['macro_f1']['ci_lower']:.4f}, {ci_results['macro_f1']['ci_upper']:.4f}]",
+        header_info,
         "",
         "| Superclass | Bootstrap Mean F1 | 95% Confidence Interval | CI Width |",
         "| :--- | :--- | :--- | :--- |",
@@ -248,3 +329,56 @@ def format_comparison_markdown_table(
     )
 
     return "\n".join(lines)
+
+
+def format_pilot_vs_full_fold_comparison_table(
+    pilot_metrics: Optional[Dict[str, Any]],
+    full_fold_metrics: Dict[str, Any],
+    target_classes: List[str] = list(TARGET_SUPERCLASSES),
+) -> str:
+    """Format comparison between Phase 3.1 Pilot Model (N_tr=240) and Phase 3.2 Full-Fold Model (N_tr=17,418)."""
+    lines = [
+        "### Training Scale Comparison: Phase 3.1 Pilot Model vs. Phase 3.2 Full-Fold Model (Fold 10)",
+        "",
+        "> [!NOTE]",
+        "> **Methodological Disclosure:** The Phase 3.1 pilot model was trained on 240 records (30 per fold, Folds 1–8) "
+        "and thresholded on 30 records (Fold 9). The Phase 3.2 model is trained on the full permitted training partition "
+        "and thresholded on the full validation partition. Both models are evaluated on the exact same Fold 10 test cohort.",
+        "",
+        "| Superclass | Test Support | Pilot Model F1 (N_tr=240) | Full-Fold Model F1 | Delta ($\\Delta\\text{ F1}$) | Full Precision | Full Recall | Full PR-AUC |",
+        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+    ]
+    if not pilot_metrics:
+        lines.append("| — | — | N/A | — | — | — | — | — |")
+        return "\n".join(lines)
+
+    p_per = pilot_metrics.get("model_test_metrics", {}).get("per_label", {})
+    f_per = full_fold_metrics["per_label"]
+
+    for sc in target_classes:
+        p_f1 = p_per.get(sc, {}).get("f1", 0.0)
+        f_m = f_per[sc]
+        f_f1 = f_m["f1"]
+        delta = f_f1 - p_f1
+        delta_str = f"+{delta:.4f}" if delta > 0 else f"{delta:.4f}"
+        prec_str = f"{f_m['precision']:.4f}" if f_m['precision'] is not None else "N/A"
+        rec_str = f"{f_m['recall']:.4f}" if f_m['recall'] is not None else "N/A"
+        prauc_str = f"{f_m['pr_auc']:.4f}" if f_m['pr_auc'] is not None else "N/A"
+
+        lines.append(
+            f"| **{sc}** | {f_m['support']} | {p_f1:.4f} | **{f_f1:.4f}** | {delta_str} | {prec_str} | {rec_str} | {prauc_str} |"
+        )
+
+    p_macro = pilot_metrics.get("model_test_metrics", {}).get("macro_f1", 0.0)
+    f_macro = full_fold_metrics["macro_f1"]
+    delta_macro = f_macro - p_macro
+    delta_macro_str = f"+{delta_macro:.4f}" if delta_macro > 0 else f"{delta_macro:.4f}"
+    prauc_macro = f"{full_fold_metrics['macro_pr_auc']:.4f}" if full_fold_metrics.get("macro_pr_auc") is not None else "—"
+
+    lines.append(
+        f"| **Macro Aggregate** | {full_fold_metrics['n_samples']} | {p_macro:.4f} | **{f_macro:.4f}** | "
+        f"{delta_macro_str} | — | — | {prauc_macro} |"
+    )
+
+    return "\n".join(lines)
+

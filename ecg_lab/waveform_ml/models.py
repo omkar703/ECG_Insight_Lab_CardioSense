@@ -182,7 +182,22 @@ def load_verified_model(
 ) -> Tuple[Any, Dict[str, Any]]:
     """Load a locally trained model artifact after verifying its cryptographic SHA-256 manifest.
 
-    Refuses to deserialize unmanifested files, modified files, or legacy pickle artifacts.
+    Local Trust Model:
+        The manifest acts as a cryptographic integrity and provenance descriptor produced
+        by the verified CardioSense training pipeline. It guarantees:
+        1. Bit-for-bit file integrity (SHA-256 hash match against serialized joblib binary).
+        2. Strict containment: rejection of all legacy unverified pickles (finalmodel.pkl, etc.).
+        3. Structural completeness: asserts presence of required metadata schema, feature versions,
+           and decision thresholds.
+        4. Revision binding: binds the artifact to the specific git source commit and dataset version.
+        Note: For enterprise/clinical production, manifests should be signed with an asymmetric
+        private key (e.g., Ed25519). In this local research environment, provenance is anchored
+        in cryptographic hashes and verified schema integrity.
+
+    Raises:
+        PermissionError: If legacy models or unmanifested artifacts are loaded.
+        ValueError: If SHA-256 mismatch or manifest schema corruption is detected.
+        FileNotFoundError: If the model file is not present.
     """
     m_path = Path(model_path)
     # Enforce isolation: strictly reject legacy models upfront
@@ -206,9 +221,35 @@ def load_verified_model(
             f"Artifact cannot be trusted."
         )
 
-    with open(man_path, "r", encoding="utf-8") as f:
-        manifest = json.load(f)
+    try:
+        with open(man_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+    except Exception as e:
+        raise ValueError(f"Manifest corruption: unable to parse JSON manifest at {man_path}: {e}")
 
+    # Validate required manifest schema fields
+    required_manifest_keys = {
+        "model_file",
+        "model_sha256",
+        "created_at_utc",
+        "architecture_version",
+        "target_superclasses",
+        "decision_thresholds",
+        "train_metadata",
+    }
+    missing_keys = required_manifest_keys - set(manifest.keys())
+    if missing_keys:
+        raise ValueError(
+            f"Manifest schema violation: missing required keys {missing_keys} in {man_path}"
+        )
+
+    # Verify model filename coherence
+    if manifest["model_file"] != m_path.name:
+        raise ValueError(
+            f"Manifest name mismatch: manifest describes '{manifest['model_file']}' but loaded from '{m_path.name}'"
+        )
+
+    # Verify cryptographic SHA-256 digest
     expected_sha = manifest.get("model_sha256")
     actual_sha = compute_file_sha256(m_path)
 

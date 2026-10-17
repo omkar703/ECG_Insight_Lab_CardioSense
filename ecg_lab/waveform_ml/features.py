@@ -251,7 +251,11 @@ class FeatureCacheManager:
 
         target_cols = [f"y_{sc}" for sc in TARGET_SUPERCLASSES]
 
+        processed_count = 0
         for ecg_id, row in df_to_process.iterrows():
+            processed_count += 1
+            if processed_count % 2500 == 0 or processed_count == records_count:
+                print(f"  [Feature Extraction] Processed {processed_count}/{records_count} records ({(processed_count/records_count)*100:.1f}%)...")
             filename_lr = row.get("filename_lr")
             label_vec = [int(row[col]) for col in target_cols]
 
