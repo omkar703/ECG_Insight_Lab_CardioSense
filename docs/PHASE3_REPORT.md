@@ -77,10 +77,12 @@ Of the 71 statements documented in `scp_statements.csv`, exactly 44 are designat
 | :--- | :--- | :--- | :--- | :--- |
 | **`NORM`** | Normal Electrocardiogram | 1 (`NORM`) | 9,514 | 43.64% |
 | **`MI`** | Myocardial Infarction | 14 (`IMI`, `ASMI`, `ILMI`, `AMI`, `ALMI`, `INJAS`, `LMI`, `INJAL`, `IPLMI`, `IPMI`, `INJIN`, `INJLA`, `PMI`, `INJIL`) | 5,469 | 25.09% |
-| **`STTC`** | ST / T Wave Changes | 13 (`NDT`, `NST_`, `DIG`, `LNGQT`, `ISC_`, `ISCA`, `ISCI`, `ISCIN`, `ISCLA`, `ISCIL`, `ISCAS`, `ISCAL`, `ISCAP`) | 5,108 | 23.43% |
-| **`CD`** | Conduction Disturbance | 11 (`LAFB`, `IRBBB`, `1AVB`, `IVCD`, `CRBBB`, `CLBBB`, `LPFB`, `WPW`, `2AVB`, `3AVB`, `ISC_`) | 4,898 | 22.47% |
+| **`STTC`** | ST / T Wave Changes | 13 (`NDT`, `NST_`, `DIG`, `LNGQT`, `ISC_`, `ISCA`, `ISCI`, `ISCIN`, `ISCLA`, `ISCIL`, `ISCAS`, `ISCAL`, `ISCAP`) | 5,108 / 5,235* | 23.43% / 24.02%* |
+| **`CD`** | Conduction Disturbance | 11 (`LAFB`, `IRBBB`, `1AVB`, `IVCD`, `CRBBB`, `CLBBB`, `LPFB`, `WPW`, `2AVB`, `3AVB`, `ILBBB`) | 4,898 | 22.47% |
 | **`HYP`** | Ventricular / Atrial Hypertrophy | 5 (`LVH`, `LAO/LAE`, `RVH`, `RAO/RAE`, `SEHYP`) | 2,649 | 12.15% |
 | **Unmapped** | Non-diagnostic statements (Rhythm/Form) | 27 (`SR`, `AFIB`, `STACH`, `SBRAD`, `SVTAC`, `PACE`, etc.) | 424 | 1.95% |
+
+*\*Audit Reconciliation Note (Phase 3.1): `ISC_` maps exclusively to `STTC` (diagnostic_class='STTC'). The earlier listing of `ISC_` in the `CD` row above was a typographical paste error; the correct 11th CD code is `ILBBB`. The difference in `STTC` counts (5,108 vs 5,235) represents exactly 127 records containing `'NST_': 0.0` (zero likelihood); see `docs/PHASE3_1_EVALUATION_AUDIT.md` for full reconciliation.*
 
 This is treated as a **multi-label** classification task:
 - 16,307 records (74.81%) have 1 diagnostic superclass.
@@ -132,6 +134,10 @@ Any alteration in parameters or schema automatically invalidates the cache and s
 - **Final Test:** Held-out **Fold 10** evaluated strictly once.
 
 ### Benchmark Comparison: Naive Baseline vs. Lightweight Model (Fold 10 Held-Out Test)
+
+> [!NOTE]
+> **Audit Trail Notice (Phase 3.1):** The evaluation table below preserves the initial exploratory smoke-test subset ($N=30$, Fold 10).
+> The definitive benchmark on the complete held-out test fold ($N=2,198$ records, 1,904 patients, zero leakage, Macro F1 = 0.4583, Micro F1 = 0.4790) was conducted under Phase 3.1 and is fully documented in [`docs/PHASE3_1_EVALUATION_AUDIT.md`](file:///run/media/op/DATA/Omkar/VIT/2y/3%20sem/Project_expo/code/docs/PHASE3_1_EVALUATION_AUDIT.md).
 
 The model was evaluated on real stratified held-out test records ($N=30$, Fold 10):
 

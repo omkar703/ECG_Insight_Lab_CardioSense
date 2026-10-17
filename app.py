@@ -698,16 +698,25 @@ elif nav_choice == "Waveform ML Lab":
                 metrics_data = json.load(f)
 
             test_m = metrics_data.get("model_test_metrics", {})
-            b_col1, b_col2, b_col3, b_col4 = st.columns(4)
+            n_eval = test_m.get("n_samples", "N/A")
+            b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns(5)
             with b_col1:
-                st.metric("Test Macro F1", f"{test_m.get('macro_f1', 0.0):.4f}")
+                st.metric("Test Cohort (Fold 10)", f"{n_eval:,} records" if isinstance(n_eval, int) else str(n_eval))
             with b_col2:
-                st.metric("Test Micro F1", f"{test_m.get('micro_f1', 0.0):.4f}")
+                st.metric("Test Macro F1", f"{test_m.get('macro_f1', 0.0):.4f}")
             with b_col3:
+                st.metric("Test Micro F1", f"{test_m.get('micro_f1', 0.0):.4f}")
+            with b_col4:
                 prauc_str = f"{test_m.get('macro_pr_auc', 0.0):.4f}" if test_m.get('macro_pr_auc') else "N/A"
                 st.metric("Test Macro PR-AUC", prauc_str)
-            with b_col4:
+            with b_col5:
                 st.metric("Split Leakage", "0 Patients (Verified)")
+
+            st.info(
+                f"**Phase 3.1 Evaluation Integrity Audit:** The benchmark results below reflect evaluation on the complete, "
+                f"official PTB-XL held-out test fold (Fold 10: {n_eval:,} records, 1,904 unique patients). "
+                "Folds 1–8 were used for training and Fold 9 for threshold selection; Fold 10 was strictly held out and never used for tuning."
+            )
 
             if summary_md_file.is_file():
                 with open(summary_md_file, "r", encoding="utf-8") as f:

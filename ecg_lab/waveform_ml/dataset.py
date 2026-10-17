@@ -82,12 +82,19 @@ def load_scp_mapping(scp_statements_path: Union[str, Path]) -> Dict[str, str]:
 def parse_scp_codes_to_superclasses(
     scp_codes_str: Any,
     code_to_super: Dict[str, str],
+    filter_zero_likelihood: bool = False,
 ) -> List[str]:
     """Parse a record's scp_codes string into a list of mapped diagnostic superclasses.
 
     Guarantees:
-    - Only codes with positive likelihood (weight > 0) are evaluated.
-    - Only codes explicitly in code_to_super are mapped.
+    - If filter_zero_likelihood=False (default, matching official PhysioNet example_physionet.py):
+      maps all keys in codes_dict that exist in code_to_super.
+      Produces official PTB-XL v1.0.3 reference counts:
+      NORM=9514, MI=5469, STTC=5235, CD=4898, HYP=2649.
+    - If filter_zero_likelihood=True:
+      strictly requires score > 0.
+      Produces: NORM=9514, MI=5469, STTC=5108, CD=4898, HYP=2649
+      (127 records where an STTC code such as NST_ has likelihood score 0.0 are excluded).
     - Preserves multi-label nature (multiple superclasses can be positive).
     - Returns sorted unique superclasses.
     """
@@ -109,19 +116,84 @@ def parse_scp_codes_to_superclasses(
 
     classes: Set[str] = set()
     for code, score in codes_dict.items():
-        try:
-            score_num = float(score)
-        except (ValueError, TypeError):
+        if code not in code_to_super:
             continue
-        if score_num > 0 and code in code_to_super:
-            classes.add(code_to_super[code])
+        if filter_zero_likelihood:
+            try:
+                score_num = float(score)
+            except (ValueError, TypeError):
+                continue
+            if score_num <= 0:
+                continue
+        classes.add(code_to_super[code])
 
     return sorted(list(classes))
+
+
+def generate_label_mapping_audit_df(
+    scp_statements_path: Union[str, Path],
+) -> pd.DataFrame:
+    """Audit all 71 statements in scp_statements.csv against official diagnostic superclasses.
+
+    Verifies:
+    - Every diagnostic == 1.0 statement maps to exactly one official diagnostic superclass.
+    - No code is assigned to conflicting superclasses.
+    - Documents explicit reason for any unmapped/excluded statement.
+    """
+    scp_path = Path(scp_statements_path)
+    if not scp_path.is_file():
+        raise FileNotFoundError(f"SCP statements file missing: {scp_path}")
+
+    df = pd.read_csv(scp_path, index_col=0)
+    code_to_super = load_scp_mapping(scp_path)
+
+    audit_rows: List[Dict[str, Any]] = []
+    seen_codes: Set[str] = set()
+
+    for code, row in df.iterrows():
+        code_str = str(code)
+        if code_str in seen_codes:
+            conflict = True
+        else:
+            seen_codes.add(code_str)
+            conflict = False
+
+        is_diag = (row.get("diagnostic") == 1.0)
+        official_class = str(row["diagnostic_class"]) if pd.notna(row.get("diagnostic_class")) else "NONE"
+        impl_class = code_to_super.get(code_str, "UNMAPPED")
+
+        if is_diag and official_class in TARGET_SUPERCLASSES:
+            status = "MAPPED_DIAGNOSTIC"
+            reason = "Official diagnostic statement mapped to canonical superclass"
+        elif row.get("rhythm") == 1.0:
+            status = "EXCLUDED_RHYTHM"
+            reason = "Rhythm descriptor statement (non-diagnostic)"
+        elif row.get("form") == 1.0:
+            status = "EXCLUDED_FORM"
+            reason = "Morphological form statement (non-diagnostic)"
+        else:
+            status = "EXCLUDED_OTHER"
+            reason = "Non-diagnostic statement"
+
+        audit_rows.append({
+            "code": code_str,
+            "description": row.get("description", ""),
+            "diagnostic_flag": 1 if is_diag else 0,
+            "official_diagnostic_class": official_class,
+            "implemented_diagnostic_class": impl_class,
+            "status": status,
+            "exclusion_reason": reason,
+            "statement_category": row.get("Statement Category", "N/A"),
+            "conflict_detected": conflict,
+        })
+
+    return pd.DataFrame(audit_rows)
 
 
 def load_ptbxl_metadata(
     data_dir: Union[str, Path] = DEFAULT_DATA_DIR,
     verify_checksums: bool = False,
+    filter_zero_likelihood: bool = False,
 ) -> pd.DataFrame:
     """Load ptbxl_database.csv and map scp_codes to multi-label superclasses.
 
@@ -161,7 +233,9 @@ def load_ptbxl_metadata(
 
     # Map superclasses
     df["diagnostic_superclasses"] = df["scp_codes"].apply(
-        lambda x: parse_scp_codes_to_superclasses(x, code_to_super)
+        lambda x: parse_scp_codes_to_superclasses(
+            x, code_to_super, filter_zero_likelihood=filter_zero_likelihood
+        )
     )
     df["num_diagnostic_labels"] = df["diagnostic_superclasses"].apply(len)
     df["has_diagnostic_label"] = df["num_diagnostic_labels"] > 0

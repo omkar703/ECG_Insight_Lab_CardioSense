@@ -108,6 +108,79 @@ def evaluate_multilabel_predictions(
     }
 
 
+def compute_bootstrap_confidence_intervals(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    target_classes: List[str] = list(TARGET_SUPERCLASSES),
+    n_bootstraps: int = 1000,
+    confidence_level: float = 0.95,
+    random_seed: int = 42,
+) -> Dict[str, Any]:
+    """Calculate non-parametric bootstrap confidence intervals for per-class and macro F1."""
+    rng = np.random.RandomState(random_seed)
+    y_true_arr = np.asarray(y_true, dtype=np.int32)
+    y_pred_arr = np.asarray(y_pred, dtype=np.int32)
+    n_samples = len(y_true_arr)
+    alpha = (1.0 - confidence_level) / 2.0
+
+    boot_per_class: Dict[str, List[float]] = {sc: [] for sc in target_classes}
+    boot_macro: List[float] = []
+
+    for _ in range(n_bootstraps):
+        idx = rng.choice(n_samples, size=n_samples, replace=True)
+        yt_boot = y_true_arr[idx]
+        yp_boot = y_pred_arr[idx]
+
+        class_f1s = []
+        for c_idx, sc in enumerate(target_classes):
+            f = float(f1_score(yt_boot[:, c_idx], yp_boot[:, c_idx], zero_division=0))
+            boot_per_class[sc].append(f)
+            class_f1s.append(f)
+        boot_macro.append(float(np.mean(class_f1s)))
+
+    ci_results: Dict[str, Any] = {
+        "n_bootstraps": n_bootstraps,
+        "confidence_level": confidence_level,
+        "macro_f1": {
+            "mean": float(np.mean(boot_macro)),
+            "ci_lower": float(np.percentile(boot_macro, 100.0 * alpha)),
+            "ci_upper": float(np.percentile(boot_macro, 100.0 * (1.0 - alpha))),
+        },
+        "per_class": {},
+    }
+
+    for sc in target_classes:
+        scores = boot_per_class[sc]
+        ci_results["per_class"][sc] = {
+            "mean": float(np.mean(scores)),
+            "ci_lower": float(np.percentile(scores, 100.0 * alpha)),
+            "ci_upper": float(np.percentile(scores, 100.0 * (1.0 - alpha))),
+        }
+
+    return ci_results
+
+
+def format_ci_markdown_table(
+    ci_results: Dict[str, Any],
+    title: str = "95% Bootstrap Confidence Intervals (Fold 10)",
+) -> str:
+    """Format bootstrap confidence interval results into a clear GitHub Flavored Markdown table."""
+    lines = [
+        f"### {title}",
+        f"**Bootstrap Resamples:** {ci_results['n_bootstraps']} | **Macro F1 (95% CI):** {ci_results['macro_f1']['mean']:.4f} "
+        f"[{ci_results['macro_f1']['ci_lower']:.4f}, {ci_results['macro_f1']['ci_upper']:.4f}]",
+        "",
+        "| Superclass | Bootstrap Mean F1 | 95% Confidence Interval | CI Width |",
+        "| :--- | :--- | :--- | :--- |",
+    ]
+    for sc, data in ci_results["per_class"].items():
+        width = data["ci_upper"] - data["ci_lower"]
+        lines.append(
+            f"| **{sc}** | {data['mean']:.4f} | [{data['ci_lower']:.4f}, {data['ci_upper']:.4f}] | {width:.4f} |"
+        )
+    return "\n".join(lines)
+
+
 def format_metrics_markdown_table(
     metrics: Dict[str, Any],
     title: str = "Multi-Label Evaluation Summary",

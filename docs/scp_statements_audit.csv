@@ -1,0 +1,72 @@
+code,description,diagnostic_flag,official_diagnostic_class,implemented_diagnostic_class,status,exclusion_reason,statement_category,conflict_detected
+NDT,non-diagnostic T abnormalities,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,other ST-T descriptive statements,False
+NST_,non-specific ST changes,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Basic roots for coding ST-T changes and abnormalities,False
+DIG,digitalis-effect,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,other ST-T descriptive statements,False
+LNGQT,long QT-interval,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,other ST-T descriptive statements,False
+NORM,normal ECG,1,NORM,NORM,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Normal/abnormal,False
+IMI,inferior myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+ASMI,anteroseptal myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+LVH,left ventricular hypertrophy,1,HYP,HYP,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Ventricular Hypertrophy,False
+LAFB,left anterior fascicular block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+ISC_,non-specific ischemic,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Basic roots for coding ST-T changes and abnormalities,False
+IRBBB,incomplete right bundle branch block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+1AVB,first degree AV block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,"Sinus node dysfunction, atrial and AV-conduction defects",False
+IVCD,non-specific intraventricular conduction disturbance (block),1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+ISCAL,ischemic in anterolateral leads,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes,False
+CRBBB,complete right bundle branch block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+CLBBB,complete left bundle branch block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+ILMI,inferolateral myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+LAO/LAE,left atrial overload/enlargement,1,HYP,HYP,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Atrial statements,False
+AMI,anterior myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+ALMI,anterolateral myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+ISCIN,ischemic in inferior leads,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes,False
+INJAS,subendocardial injury in anteroseptal leads,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes compatible with subendocardial injury,False
+LMI,lateral myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+ISCIL,ischemic in inferolateral leads,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes,False
+LPFB,left posterior fascicular block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+ISCAS,ischemic in anteroseptal leads,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes,False
+INJAL,subendocardial injury in anterolateral leads,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes compatible with subendocardial injury,False
+ISCLA,ischemic in lateral leads,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes,False
+RVH,right ventricular hypertrophy,1,HYP,HYP,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Ventricular Hypertrophy,False
+ANEUR,ST-T changes compatible with ventricular aneurysm,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,other ST-T descriptive statements,False
+RAO/RAE,right atrial overload/enlargement,1,HYP,HYP,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Atrial statements,False
+EL,electrolytic disturbance or drug (former EDIS),1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,physiopathological nature of ST-T changes,False
+WPW,Wolf-Parkinson-White syndrome,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+ILBBB,incomplete left bundle branch block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Intraventricular and intra-atrial Conduction disturbances,False
+IPLMI,inferoposterolateral myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+ISCAN,ischemic in anterior leads,1,STTC,STTC,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes,False
+IPMI,inferoposterior myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+SEHYP,septal hypertrophy,1,HYP,HYP,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Ventricular Hypertrophy,False
+INJIN,subendocardial injury in inferior leads,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes compatible with subendocardial injury,False
+INJLA,subendocardial injury in lateral leads,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes compatible with subendocardial injury,False
+PMI,posterior myocardial infarction,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,Myocardial Infarction,False
+3AVB,third degree AV block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,"Sinus node dysfunction, atrial and AV-conduction defects",False
+INJIL,subendocardial injury in inferolateral leads,1,MI,MI,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,ischemic ST-T changes compatible with subendocardial injury,False
+2AVB,second degree AV block,1,CD,CD,MAPPED_DIAGNOSTIC,Official diagnostic statement mapped to canonical superclass,"Sinus node dysfunction, atrial and AV-conduction defects",False
+ABQRS,abnormal QRS,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Normal/abnormal,False
+PVC,ventricular premature complex,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Statements related to ectopic rhythm abnormalities,False
+STD_,non-specific ST depression,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Basic roots for coding ST-T changes and abnormalities,False
+VCLVH,voltage criteria (QRS) for left ventricular hypertrophy,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Ventricular Hypertrophy,False
+QWAVE,Q waves present,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Other QRS morphology descriptive statements,False
+LOWT,low amplitude T-waves,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),other ST-T descriptive statements,False
+NT_,non-specific T-wave changes,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Basic roots for coding ST-T changes and abnormalities,False
+PAC,atrial premature complex,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Statements related to ectopic rhythm abnormalities,False
+LPR,prolonged PR interval,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+INVT,inverted T-waves,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),other ST-T descriptive statements,False
+LVOLT,low QRS voltages in the frontal and horizontal leads,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Other QRS morphology descriptive statements,False
+HVOLT,high QRS voltage,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Other QRS morphology descriptive statements,False
+TAB_,T-wave abnormality,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Basic roots for coding ST-T changes and abnormalities,False
+STE_,non-specific ST elevation,0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Basic roots for coding ST-T changes and abnormalities,False
+PRC(S),premature complex(es),0,NONE,UNMAPPED,EXCLUDED_FORM,Morphological form statement (non-diagnostic),Statements related to ectopic rhythm abnormalities,False
+SR,sinus rhythm,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+AFIB,atrial fibrillation,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+STACH,sinus tachycardia,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+SARRH,sinus arrhythmia,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+SBRAD,sinus bradycardia,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+PACE,normal functioning artificial pacemaker,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Pacemaker types and pacemaker function,False
+SVARR,supraventricular arrhythmia,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+BIGU,"bigeminal pattern (unknown origin, SV or Ventricular)",0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to ectopic rhythm abnormalities,False
+AFLT,atrial flutter,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+SVTAC,supraventricular tachycardia,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+PSVT,paroxysmal supraventricular tachycardia,0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to impulse formation (abnormalities),False
+TRIGU,"trigeminal pattern (unknown origin, SV or Ventricular)",0,NONE,UNMAPPED,EXCLUDED_RHYTHM,Rhythm descriptor statement (non-diagnostic),Statements related to ectopic rhythm abnormalities,False

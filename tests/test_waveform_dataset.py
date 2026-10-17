@@ -84,9 +84,14 @@ def test_parse_scp_codes_to_superclasses(mock_scp_file: Path):
     res2 = parse_scp_codes_to_superclasses("{'IMI': 80.0, 'LAFB': 50.0}", mapping)
     assert sorted(res2) == ["CD", "MI"]
 
-    # Zero score should be ignored
-    res3 = parse_scp_codes_to_superclasses("{'IMI': 0.0, 'LAFB': 100.0}", mapping)
-    assert res3 == ["CD"]
+    # Zero score handling
+    # With filter_zero_likelihood=True: zero likelihood scores are excluded
+    res3_filtered = parse_scp_codes_to_superclasses("{'IMI': 0.0, 'LAFB': 100.0}", mapping, filter_zero_likelihood=True)
+    assert res3_filtered == ["CD"]
+
+    # With default filter_zero_likelihood=False (official PhysioNet key-presence benchmark):
+    res3_all = parse_scp_codes_to_superclasses("{'IMI': 0.0, 'LAFB': 100.0}", mapping, filter_zero_likelihood=False)
+    assert sorted(res3_all) == ["CD", "MI"]
 
     # Only non-diagnostic rhythm codes
     res4 = parse_scp_codes_to_superclasses("{'SR': 100.0}", mapping)
@@ -126,3 +131,41 @@ def test_read_wfdb_record_missing_file():
     """Test that missing WFDB header file raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         read_wfdb_record("/non/existent/path/00001_lr")
+
+
+def test_label_mapping_audit_integrity():
+    """Verify that all 71 statements in the official scp_statements.csv have zero mapping conflicts."""
+    from ecg_lab.waveform_ml.dataset import generate_label_mapping_audit_df
+    audit_df = generate_label_mapping_audit_df("data/ptb-xl/scp_statements.csv")
+    assert len(audit_df) == 71
+    # Check status breakdown
+    assert len(audit_df[audit_df["status"] == "MAPPED_DIAGNOSTIC"]) == 44
+    assert len(audit_df[audit_df["status"] == "EXCLUDED_FORM"]) == 15
+    assert len(audit_df[audit_df["status"] == "EXCLUDED_RHYTHM"]) == 12
+    # Verify zero conflicts
+    assert len(audit_df[audit_df["conflict_detected"]]) == 0
+
+
+def test_isc_statement_exclusive_mapping():
+    """Verify that ISC_ maps exclusively to STTC and never to CD or other superclasses."""
+    from ecg_lab.waveform_ml.dataset import load_scp_mapping
+    mapping = load_scp_mapping("data/ptb-xl/scp_statements.csv")
+    assert "ISC_" in mapping
+    assert mapping["ISC_"] == "STTC"
+    # Ensure ILBBB is the code mapped to CD, not ISC_
+    assert mapping.get("ILBBB") == "CD"
+
+
+def test_metadata_counts_reconciliation():
+    """Verify that metadata counts match official PhysioNet documentation (9514, 5469, 5235, 4898, 2649)."""
+    df_official = load_ptbxl_metadata("data/ptb-xl", filter_zero_likelihood=False)
+    assert int(df_official["y_NORM"].sum()) == 9514
+    assert int(df_official["y_MI"].sum()) == 5469
+    assert int(df_official["y_STTC"].sum()) == 5235
+    assert int(df_official["y_CD"].sum()) == 4898
+    assert int(df_official["y_HYP"].sum()) == 2649
+
+    # Also verify that strictly filtering zero likelihood excludes the 127 zero-weight STTC records
+    df_filtered = load_ptbxl_metadata("data/ptb-xl", filter_zero_likelihood=True)
+    assert int(df_filtered["y_STTC"].sum()) == 5108
+    assert int(df_official["y_STTC"].sum()) - int(df_filtered["y_STTC"].sum()) == 127

@@ -17,6 +17,7 @@ from ecg_lab.waveform_ml.config import (
     DEFAULT_CACHE_DIR,
     DEFAULT_DATA_DIR,
     DEFAULT_RANDOM_SEED,
+    PHYSIONET_DATASET_NAME,
     TARGET_SUPERCLASSES,
     TEST_FOLDS,
     TRAIN_FOLDS,
@@ -27,7 +28,9 @@ from ecg_lab.waveform_ml.dataset import (
     validate_split_integrity,
 )
 from ecg_lab.waveform_ml.evaluate import (
+    compute_bootstrap_confidence_intervals,
     evaluate_multilabel_predictions,
+    format_ci_markdown_table,
     format_comparison_markdown_table,
     format_metrics_markdown_table,
 )
@@ -129,16 +132,43 @@ def run_training_and_evaluation(
         y_test, test_preds_tuned, test_probs, target_classes, thresholds=val_thresholds
     )
 
-    # 8. Save model with cryptographic provenance manifest
+    # 8. Compute bootstrap confidence intervals on test fold (Fold 10)
+    test_ci = compute_bootstrap_confidence_intervals(
+        y_test,
+        test_preds_tuned,
+        target_classes=target_classes,
+        n_bootstraps=1000,
+        random_seed=random_seed,
+    )
+    ci_table = format_ci_markdown_table(
+        test_ci,
+        title=f"95% Bootstrap Confidence Intervals (Fold 10, N={len(X_test)})",
+    )
+
+    # 9. Save model with cryptographic provenance manifest
+    def _get_git_revision() -> str:
+        try:
+            import subprocess
+            res = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
+            return res.stdout.strip()
+        except Exception:
+            return "UNKNOWN"
+
     train_metadata = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "random_seed": random_seed,
         "c_param": c_param,
+        "dataset_name": PHYSIONET_DATASET_NAME,
+        "code_revision": _get_git_revision(),
         "train_samples": int(len(X_train)),
         "val_samples": int(len(X_val)),
         "test_samples": int(len(X_test)),
+        "test_patients": int(split_stats["test_patients"]),
         "train_positive_support": {
             cls_name: int(np.sum(y_train[:, idx])) for idx, cls_name in enumerate(target_classes)
+        },
+        "test_positive_support": {
+            cls_name: int(np.sum(y_test[:, idx])) for idx, cls_name in enumerate(target_classes)
         },
         "split_integrity_verified": split_stats["split_integrity_verified"],
     }
@@ -151,19 +181,27 @@ def run_training_and_evaluation(
         output_dir=out_path,
     )
 
-    # 9. Format Markdown reports
+    # 10. Format Markdown reports
     val_table = format_metrics_markdown_table(val_metrics, title="Validation Fold 9 Evaluation")
-    test_table = format_metrics_markdown_table(test_metrics, title="Held-Out Test Fold 10 Evaluation")
+    test_table = format_metrics_markdown_table(
+        test_metrics,
+        title=f"Held-Out Test Fold 10 Evaluation (Full Cohort, N={len(X_test):,})",
+    )
     comp_table = format_comparison_markdown_table(base_test_metrics, test_metrics, target_classes)
 
     summary_report = "\n\n".join([
         "# CardioSense Phase 3 Waveform ML Benchmark Report",
         f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
+        f"**Dataset:** {PHYSIONET_DATASET_NAME} (100 Hz WFDB)",
         f"**Model:** Logistic Regression (One-vs-Rest, Balanced Class Weights, C={c_param})",
         f"**Features:** 148 deterministic lead & cross-lead statistics (Version {cache_manifest.get('feature_version')})",
+        f"**Split Statistics:** Train: {len(X_train):,} records ({split_stats['train_patients']:,} patients, Folds 1–8) | "
+        f"Validation: {len(X_val):,} records ({split_stats['val_patients']:,} patients, Fold 9) | "
+        f"Test: {len(X_test):,} records ({split_stats['test_patients']:,} patients, Fold 10, strictly held out)",
         comp_table,
         val_table,
         test_table,
+        ci_table,
     ])
 
     report_path = out_path / "benchmark_summary.md"
@@ -183,6 +221,7 @@ def run_training_and_evaluation(
         "baseline_test_metrics": base_test_metrics,
         "model_val_metrics": val_metrics,
         "model_test_metrics": test_metrics,
+        "test_bootstrap_ci": test_ci,
         "summary_markdown": summary_report,
     }
 
