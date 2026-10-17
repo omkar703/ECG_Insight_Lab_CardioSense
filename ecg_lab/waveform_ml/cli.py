@@ -243,6 +243,109 @@ def cmd_train(args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_audit_paired_comparison(args: argparse.Namespace) -> int:
+    """Audit paired model comparison on Fold 10 using patient-clustered bootstrap."""
+    print("[*] Running CardioSense Phase 3.2.1 Paired Model-Comparison Audit...")
+    data_dir = Path(args.data_dir)
+    cache_dir = Path(args.cache_dir)
+    output_dir = Path(args.output_dir)
+    n_bootstraps = args.n_bootstraps
+    random_seed = args.random_seed
+
+    try:
+        from ecg_lab.waveform_ml.evaluate import (
+            compute_paired_patient_cluster_bootstrap_ci,
+            format_paired_comparison_markdown_table,
+        )
+        from ecg_lab.waveform_ml.models import load_verified_model
+        from ecg_lab.waveform_ml.train import cache_manifest_hash
+        import numpy as np
+        import pandas as pd
+
+        # 1. Load metadata and locate Fold 10 records
+        df = load_ptbxl_metadata(data_dir)
+        test_mask = (df["strat_fold"] == 10)
+        fold10_meta_eids = df[test_mask].index.to_numpy()
+        patient_ids = df.loc[fold10_meta_eids, "patient_id"].to_numpy()
+
+        print(f"  Located {len(fold10_meta_eids):,} Fold 10 records from {len(np.unique(patient_ids)):,} unique patients.")
+
+        # 2. Load feature cache
+        cache_mgr = FeatureCacheManager(cache_dir=cache_dir)
+        X, y, ecg_ids, manifest = cache_mgr.build_or_load_cache(
+            df, data_dir=data_dir, metadata_hash=cache_manifest_hash(df)
+        )
+
+        cached_eid_to_idx = {eid: idx for idx, eid in enumerate(ecg_ids)}
+        fold10_indices = np.array([cached_eid_to_idx[eid] for eid in fold10_meta_eids])
+
+        X_test = X[fold10_indices]
+        y_test = y[fold10_indices]
+
+        # 3. Load Verified Pilot Model
+        pilot_model_path = output_dir / "pilot_evaluation" / "waveform_lr_pilot_model.joblib"
+        if not pilot_model_path.is_file():
+            print(f"[ERROR] Pilot model artifact not found at: {pilot_model_path}")
+            return 1
+        pilot_model, pilot_manifest = load_verified_model(pilot_model_path)
+        target_classes = pilot_manifest["target_superclasses"]
+        pilot_thresholds = np.array([pilot_manifest["decision_thresholds"][c] for c in target_classes])
+        print(f"  Loaded verified pilot model (SHA-256: {pilot_manifest['model_sha256'][:16]}...)")
+
+        # 4. Load Verified Full-Fold Model
+        full_model_path = output_dir / "waveform_lr_model.joblib"
+        if not full_model_path.is_file():
+            print(f"[ERROR] Full-fold model artifact not found at: {full_model_path}")
+            return 1
+        full_model, full_manifest = load_verified_model(full_model_path)
+        full_thresholds = np.array([full_manifest["decision_thresholds"][c] for c in target_classes])
+        print(f"  Loaded verified full-fold model (SHA-256: {full_manifest['model_sha256'][:16]}...)")
+
+        # 5. Predict both models on exact same Fold 10 records
+        pilot_probs = pilot_model.predict_proba(X_test)
+        pilot_preds = (pilot_probs >= pilot_thresholds).astype(np.int32)
+
+        full_probs = full_model.predict_proba(X_test)
+        full_preds = (full_probs >= full_thresholds).astype(np.int32)
+
+        # 6. Run Paired Patient-Clustered Bootstrap
+        print(f"  Executing {n_bootstraps:,} paired patient-cluster bootstrap iterations (seed: {random_seed})...")
+        paired_res = compute_paired_patient_cluster_bootstrap_ci(
+            y_true=y_test,
+            y_pred_a=full_preds,
+            y_pred_b=pilot_preds,
+            patient_ids=patient_ids,
+            target_classes=target_classes,
+            n_bootstraps=n_bootstraps,
+            confidence_level=0.95,
+            random_seed=random_seed,
+            model_a_name="Full-Fold Model",
+            model_b_name="Pilot Model",
+        )
+
+        table_md = format_paired_comparison_markdown_table(paired_res)
+        print("\n" + table_md + "\n")
+
+        # 7. Save machine-readable output
+        out_json_path = output_dir / "paired_model_comparison.json"
+        with open(out_json_path, "w", encoding="utf-8") as f:
+            json.dump(paired_res, f, indent=2)
+        print(f"[SUCCESS] Paired comparison results saved to: {out_json_path}")
+
+        # Also save markdown summary
+        out_md_path = output_dir / "paired_model_comparison.md"
+        with open(out_md_path, "w", encoding="utf-8") as f:
+            f.write(table_md)
+        print(f"[SUCCESS] Paired comparison markdown saved to: {out_md_path}")
+
+        return 0
+    except Exception as e:
+        print(f"[FATAL] Paired comparison audit failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="ecg_lab.waveform_ml",
@@ -290,7 +393,13 @@ def main() -> int:
     sub_dl_miss = subparsers.add_parser("download-missing", help="Download all missing PTB-XL records")
     sub_dl_miss.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Dataset root dir")
     sub_dl_miss.add_argument("--concurrency", type=int, default=40, help="Async download concurrency")
-    sub_dl_miss.add_argument("--folds", default=None, help="Comma-separated folds to download (e.g. 1,2,3)")
+    # Subcommand: audit-paired-comparison
+    sub_pair = subparsers.add_parser("audit-paired-comparison", help="Audit paired model comparison on Fold 10")
+    sub_pair.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Dataset root dir")
+    sub_pair.add_argument("--cache-dir", default=str(DEFAULT_CACHE_DIR), help="Cache directory")
+    sub_pair.add_argument("--output-dir", default=str(DEFAULT_ARTIFACT_DIR), help="Artifacts directory")
+    sub_pair.add_argument("--n-bootstraps", type=int, default=2000, help="Number of bootstrap resamples")
+    sub_pair.add_argument("--random-seed", type=int, default=DEFAULT_RANDOM_SEED, help="Random seed")
 
     args = parser.parse_args()
     if not args.command:
@@ -311,6 +420,8 @@ def main() -> int:
         return cmd_extract_features(args)
     elif args.command == "train":
         return cmd_train(args)
+    elif args.command == "audit-paired-comparison":
+        return cmd_audit_paired_comparison(args)
     else:
         parser.print_help()
         return 1

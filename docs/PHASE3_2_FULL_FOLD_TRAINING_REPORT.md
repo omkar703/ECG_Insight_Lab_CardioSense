@@ -156,7 +156,24 @@ Standard record-level bootstrapping assumes independent observations. Because mu
 | **HYP** | 0.5195 | 0.5193 | **[0.4671, 0.5662]** | 0.0991 |
 | **Macro Aggregate** | **0.6093** | **0.6091** | **[0.5910, 0.6269]** | **0.0359** |
 
-*The entire 95% confidence interval for the full-fold Macro F1 ([0.5910, 0.6269]) lies completely above the Phase 3.1 pilot point estimate (0.4583), confirming that the +0.1510 gain is statistically significant and not an artifact of random sampling.*
+### 5.1 Paired Model-Comparison Bootstrap (Phase 3.2.1 Audit)
+
+> [!IMPORTANT]
+> **Methodological Clarification on Statistical Significance:** A confidence interval for one model's score ([0.5910, 0.6269]) compared with another model's point estimate (0.4583) does **not** constitute a confidence interval for the difference. To rigorously assess the performance delta between the Phase 3.1 pilot model and the Phase 3.2 full-fold model, a **paired patient-clustered bootstrap** ($B=2,000$ resamples, seed: 42) was conducted across the exact 2,198 Fold 10 records sharing 1,904 patient clusters.
+
+| Metric / Superclass | Pilot Model F1 ($N_{\text{tr}}=240$) | Full-Fold Model F1 ($N_{\text{tr}}=17,418$) | Paired Delta ($\Delta$) | Bootstrap SE | 95% Paired Bootstrap CI ($B=2,000$) | Paired Difference Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **NORM** | 0.5882 | **0.7668** | **+0.1785** | 0.0142 | [0.1503, 0.2071] | Positive Difference ($> 0$) |
+| **MI** | 0.3883 | **0.5594** | **+0.1711** | 0.0186 | [0.1356, 0.2070] | Positive Difference ($> 0$) |
+| **STTC** | 0.4909 | **0.6006** | **+0.1097** | 0.0156 | [0.0789, 0.1398] | Positive Difference ($> 0$) |
+| **CD** | 0.4933 | **0.6002** | **+0.1068** | 0.0176 | [0.0729, 0.1406] | Positive Difference ($> 0$) |
+| **HYP** | 0.3305 | **0.5195** | **+0.1890** | 0.0266 | [0.1346, 0.2393] | Positive Difference ($> 0$) |
+| **Macro Aggregate** | 0.4583 | **0.6093** | **+0.1510** | 0.0087 | **[0.1343, 0.1681]** | **Positive Difference ($> 0$)** |
+
+**Interpretation & Methodological Caveats:**
+1. **Paired Difference Significance:** Because the 95% paired confidence interval for the Macro F1 difference (**[0.1343, 0.1681]**) lies strictly and entirely above zero, there is rigorous statistical evidence of a positive difference under this paired bootstrap comparison on the Fold 10 cohort.
+2. **Re-Evaluation Disclosure:** Fold 10 is not an untouched, first-time holdout; it was previously evaluated in Phase 3.1. This comparison is preplanned on a previously examined cohort.
+3. **No Clinical Validity Claims:** A statistically significant paired gain on offline digital waveform benchmark data does not imply clinical diagnostic efficacy, medical device safety, or generalization across distinct hospital populations or recording devices.
 
 ---
 

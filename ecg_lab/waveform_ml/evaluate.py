@@ -382,3 +382,185 @@ def format_pilot_vs_full_fold_comparison_table(
 
     return "\n".join(lines)
 
+
+def compute_paired_patient_cluster_bootstrap_ci(
+    y_true: np.ndarray,
+    y_pred_a: np.ndarray,
+    y_pred_b: np.ndarray,
+    patient_ids: Union[np.ndarray, List[Any]],
+    target_classes: List[str] = list(TARGET_SUPERCLASSES),
+    n_bootstraps: int = 2000,
+    confidence_level: float = 0.95,
+    random_seed: int = 42,
+    model_a_name: str = "Full-Fold Model (N_tr=17,418)",
+    model_b_name: str = "Pilot Model (N_tr=240)",
+) -> Dict[str, Any]:
+    """Calculate paired patient-clustered bootstrap confidence intervals for model comparison.
+
+    Resamples unique patient clusters with replacement (preserving intra-patient
+    correlation) and evaluates both models simultaneously on the exact same patient
+    cluster draws. Computes paired differences (Model A - Model B) across all replicates.
+
+    Returns point estimates, percentile 95% CIs, bootstrap SE, and empirical p-values.
+    """
+    rng = np.random.RandomState(random_seed)
+    yt_arr = np.asarray(y_true, dtype=np.int32)
+    ya_arr = np.asarray(y_pred_a, dtype=np.int32)
+    yb_arr = np.asarray(y_pred_b, dtype=np.int32)
+    pts_arr = np.asarray(patient_ids)
+
+    n_samples, n_classes = yt_arr.shape
+    unique_patients = np.unique(pts_arr)
+    n_unique_patients = len(unique_patients)
+    alpha = (1.0 - confidence_level) / 2.0
+
+    # Build patient-to-indices lookup for fast cluster retrieval
+    patient_to_indices: Dict[Any, np.ndarray] = {}
+    for idx, p_id in enumerate(pts_arr):
+        if p_id not in patient_to_indices:
+            patient_to_indices[p_id] = []
+        patient_to_indices[p_id].append(idx)
+    for p_id in patient_to_indices:
+        patient_to_indices[p_id] = np.array(patient_to_indices[p_id], dtype=np.int64)
+
+    # Point estimates on full cohort
+    def _compute_f1_vector(yt: np.ndarray, yp: np.ndarray) -> np.ndarray:
+        tp = np.sum((yt == 1) & (yp == 1), axis=0)
+        denom = np.sum(yt, axis=0) + np.sum(yp, axis=0)
+        return np.where(denom > 0, 2.0 * tp / denom, 0.0)
+
+    f1_a_point = _compute_f1_vector(yt_arr, ya_arr)
+    f1_b_point = _compute_f1_vector(yt_arr, yb_arr)
+    macro_a_point = float(np.mean(f1_a_point))
+    macro_b_point = float(np.mean(f1_b_point))
+    delta_macro_point = float(macro_a_point - macro_b_point)
+    delta_class_point = {
+        sc: float(f1_a_point[c] - f1_b_point[c]) for c, sc in enumerate(target_classes)
+    }
+
+    # Replicate tracking
+    boot_delta_macro: List[float] = []
+    boot_macro_a: List[float] = []
+    boot_macro_b: List[float] = []
+    boot_delta_per_class: Dict[str, List[float]] = {sc: [] for sc in target_classes}
+    boot_class_a: Dict[str, List[float]] = {sc: [] for sc in target_classes}
+    boot_class_b: Dict[str, List[float]] = {sc: [] for sc in target_classes}
+
+    for _ in range(n_bootstraps):
+        sampled_pts = rng.choice(unique_patients, size=n_unique_patients, replace=True)
+        sampled_indices = np.concatenate([patient_to_indices[p] for p in sampled_pts])
+
+        yt_boot = yt_arr[sampled_indices]
+        ya_boot = ya_arr[sampled_indices]
+        yb_boot = yb_arr[sampled_indices]
+
+        f1_a_boot = _compute_f1_vector(yt_boot, ya_boot)
+        f1_b_boot = _compute_f1_vector(yt_boot, yb_boot)
+
+        m_a = float(np.mean(f1_a_boot))
+        m_b = float(np.mean(f1_b_boot))
+        d_m = float(m_a - m_b)
+
+        boot_macro_a.append(m_a)
+        boot_macro_b.append(m_b)
+        boot_delta_macro.append(d_m)
+
+        for c, sc in enumerate(target_classes):
+            boot_class_a[sc].append(float(f1_a_boot[c]))
+            boot_class_b[sc].append(float(f1_b_boot[c]))
+            boot_delta_per_class[sc].append(float(f1_a_boot[c] - f1_b_boot[c]))
+
+    delta_macro_arr = np.array(boot_delta_macro)
+    se_delta_macro = float(np.std(delta_macro_arr, ddof=1))
+    ci_lower_macro = float(np.percentile(delta_macro_arr, 100.0 * alpha))
+    ci_upper_macro = float(np.percentile(delta_macro_arr, 100.0 * (1.0 - alpha)))
+    p_val_nonpos = float(np.mean(delta_macro_arr <= 0.0))
+
+    per_class_summary: Dict[str, Dict[str, Any]] = {}
+    for sc in target_classes:
+        d_arr = np.array(boot_delta_per_class[sc])
+        ci_l = float(np.percentile(d_arr, 100.0 * alpha))
+        ci_u = float(np.percentile(d_arr, 100.0 * (1.0 - alpha)))
+        per_class_summary[sc] = {
+            "point_f1_a": float(f1_a_point[target_classes.index(sc)]),
+            "point_f1_b": float(f1_b_point[target_classes.index(sc)]),
+            "point_delta": delta_class_point[sc],
+            "mean_delta": float(np.mean(d_arr)),
+            "se_delta": float(np.std(d_arr, ddof=1)),
+            "ci_lower": ci_l,
+            "ci_upper": ci_u,
+            "is_significantly_positive": bool(ci_l > 0.0),
+        }
+
+    return {
+        "n_bootstraps": int(n_bootstraps),
+        "n_unique_patients": int(n_unique_patients),
+        "n_records": int(n_samples),
+        "random_seed": int(random_seed),
+        "confidence_level": float(confidence_level),
+        "resampling_unit": "patient_cluster",
+        "model_a_name": model_a_name,
+        "model_b_name": model_b_name,
+        "paired_macro_delta": {
+            "point_f1_a": macro_a_point,
+            "point_f1_b": macro_b_point,
+            "point_delta": delta_macro_point,
+            "mean_delta": float(np.mean(delta_macro_arr)),
+            "se_delta": se_delta_macro,
+            "ci_lower": ci_lower_macro,
+            "ci_upper": ci_upper_macro,
+            "empirical_p_value_nonpos": p_val_nonpos,
+            "is_significantly_positive": bool(ci_lower_macro > 0.0),
+        },
+        "per_class": per_class_summary,
+    }
+
+
+def format_paired_comparison_markdown_table(
+    paired_res: Dict[str, Any],
+    title: str = "Paired Patient-Clustered Bootstrap Comparison (Fold 10)",
+) -> str:
+    """Format paired patient-clustered bootstrap results into a clear GitHub Flavored Markdown table."""
+    m_info = paired_res["paired_macro_delta"]
+    b_count = paired_res["n_bootstraps"]
+    n_pts = paired_res["n_unique_patients"]
+    n_rec = paired_res["n_records"]
+    c_lvl = int(paired_res["confidence_level"] * 100)
+
+    delta_sign = "+" if m_info["point_delta"] > 0 else ""
+    macro_sig_badge = "**Significant (+)**" if m_info["is_significantly_positive"] else "Not Significant"
+
+    lines = [
+        f"### {title}",
+        "",
+        "> [!NOTE]",
+        f"> **Paired Bootstrap Design:** Evaluated across {n_rec:,} Fold 10 records sharing {n_pts:,} unique patient clusters. "
+        f"In each of {b_count:,} bootstrap iterations (seed: {paired_res['random_seed']}), identical patient clusters were resampled "
+        f"with replacement for both `{paired_res['model_a_name']}` and `{paired_res['model_b_name']}`. "
+        f"The paired difference $\\Delta = \\text{{Macro F1}}_A - \\text{{Macro F1}}_B$ directly measures paired gain while controlling for intra-patient correlation.",
+        "",
+        f"**Macro F1 Point Delta:** {delta_sign}{m_info['point_delta']:.4f} | "
+        f"**{c_lvl}% Paired CI:** [{m_info['ci_lower']:.4f}, {m_info['ci_upper']:.4f}] | "
+        f"**Bootstrap SE:** {m_info['se_delta']:.4f} | "
+        f"**Outcome:** {macro_sig_badge}",
+        "",
+        f"| Superclass | {paired_res['model_b_name']} F1 | {paired_res['model_a_name']} F1 | Paired Delta ($\\Delta$) | Bootstrap SE | {c_lvl}% Paired CI | 95% Significant? |",
+        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+    ]
+
+    for sc, p_info in paired_res["per_class"].items():
+        d_str = f"+{p_info['point_delta']:.4f}" if p_info['point_delta'] > 0 else f"{p_info['point_delta']:.4f}"
+        sig_str = "Yes (Positive)" if p_info["is_significantly_positive"] else "No"
+        lines.append(
+            f"| **{sc}** | {p_info['point_f1_b']:.4f} | **{p_info['point_f1_a']:.4f}** | **{d_str}** | "
+            f"{p_info['se_delta']:.4f} | [{p_info['ci_lower']:.4f}, {p_info['ci_upper']:.4f}] | {sig_str} |"
+        )
+
+    lines.append(
+        f"| **Macro Aggregate** | {m_info['point_f1_b']:.4f} | **{m_info['point_f1_a']:.4f}** | **{delta_sign}{m_info['point_delta']:.4f}** | "
+        f"{m_info['se_delta']:.4f} | **[{m_info['ci_lower']:.4f}, {m_info['ci_upper']:.4f}]** | **{sig_str}** |"
+    )
+
+    return "\n".join(lines)
+
+

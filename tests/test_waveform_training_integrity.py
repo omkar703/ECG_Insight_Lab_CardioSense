@@ -161,3 +161,49 @@ def test_format_pilot_vs_full_fold_comparison_table():
     assert "| **NORM** |" in table
     assert "| **Macro Aggregate** |" in table
     assert "+0.0517" in table  # delta macro F1
+
+
+def test_paired_patient_cluster_bootstrap_ci():
+    """Verify that compute_paired_patient_cluster_bootstrap_ci computes paired differences correctly."""
+    from ecg_lab.waveform_ml.evaluate import (
+        compute_paired_patient_cluster_bootstrap_ci,
+        format_paired_comparison_markdown_table,
+    )
+
+    # 30 samples, 10 patients (3 records per patient)
+    patient_ids = np.repeat(np.arange(1, 11), 3)
+    rng = np.random.RandomState(42)
+    y_true = rng.randint(0, 2, (30, 2))
+
+    # Model A is perfect
+    y_pred_a = y_true.copy()
+    # Model B has 50% random errors
+    y_pred_b = y_true.copy()
+    y_pred_b[:15] = 1 - y_pred_b[:15]
+
+    res = compute_paired_patient_cluster_bootstrap_ci(
+        y_true=y_true,
+        y_pred_a=y_pred_a,
+        y_pred_b=y_pred_b,
+        patient_ids=patient_ids,
+        target_classes=["C0", "C1"],
+        n_bootstraps=200,
+        random_seed=42,
+        model_a_name="Superior Model",
+        model_b_name="Inferior Model",
+    )
+
+    macro_d = res["paired_macro_delta"]
+    assert macro_d["point_f1_a"] > macro_d["point_f1_b"]
+    assert macro_d["point_delta"] > 0
+    assert macro_d["ci_lower"] <= macro_d["mean_delta"] <= macro_d["ci_upper"]
+    assert macro_d["ci_lower"] > 0  # Superior model is significantly better
+    assert macro_d["is_significantly_positive"] is True
+
+    # Test markdown table formatting
+    table_md = format_paired_comparison_markdown_table(res)
+    assert "### Paired Patient-Clustered Bootstrap Comparison" in table_md
+    assert "Superior Model" in table_md
+    assert "Inferior Model" in table_md
+    assert "Significant (+)" in table_md
+

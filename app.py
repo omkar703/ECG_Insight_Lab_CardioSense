@@ -718,11 +718,11 @@ elif nav_choice == "Waveform ML Lab":
                 st.metric("Test Macro PR-AUC", prauc_str)
 
             st.info(
-                f"**Phase 3.2 Full-Fold Training Integrity & Evaluation:** The benchmark results below reflect "
-                f"full-fold training on Folds 1–8 ({n_train:,} records, 15,023 patients), threshold selection on "
-                f"Fold 9 ({n_val:,} records, 1,942 patients), and preplanned re-evaluation on the complete held-out "
-                f"test fold (Fold 10: {n_eval:,} records, 1,904 patients) with patient-clustered bootstrap confidence intervals (B=1,000). "
-                f"Zero patient split leakage is cryptographically and mathematically verified."
+                f"**Phase 3.2.1 Paired Model-Comparison Audit:** Evaluated on the shared Fold 10 test cohort "
+                f"({n_eval:,} records, 1,904 patients) against the Phase 3.1 pilot model. The paired patient-clustered "
+                f"bootstrap ($B=2,000$, seed: 42) demonstrates a statistically significant paired Macro F1 improvement "
+                f"of +0.1510 (95% paired CI: [0.1343, 0.1681], SE: 0.0087). Offline research benchmark only; "
+                f"does not claim clinical validity or generalization."
             )
 
             if summary_md_file.is_file():
@@ -730,6 +730,12 @@ elif nav_choice == "Waveform ML Lab":
                     st.markdown(f.read())
             else:
                 st.json(metrics_data)
+
+            paired_md_file = Path(DEFAULT_ARTIFACT_DIR) / "paired_model_comparison.md"
+            if paired_md_file.is_file():
+                st.markdown("---")
+                with open(paired_md_file, "r", encoding="utf-8") as f:
+                    st.markdown(f.read())
 
     # --------------------------------------------------------------------------
     # Tab 3: Dataset Provenance & Methodology
