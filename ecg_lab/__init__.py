@@ -28,4 +28,19 @@ __all__ = [
     "ImageMetadata",
     "validate_image_file",
     "validate_image_bytes",
+    "digitize_ecg_image",
+    "DigitizationResult",
+    "DigitizationStatus",
+    "CalibrationStatus",
+    "AmplitudeUnit",
+    "LeadSignal",
 ]
+
+from ecg_lab.digitization import (
+    digitize_ecg_image,
+    DigitizationResult,
+    DigitizationStatus,
+    CalibrationStatus,
+    AmplitudeUnit,
+    LeadSignal,
+)

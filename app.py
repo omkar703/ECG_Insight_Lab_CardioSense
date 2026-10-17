@@ -4,8 +4,12 @@ Editorial academic interface designed according to the Quiet Academic Editorial
 aesthetic specification (restrained typography, warm ivory palette, research focus).
 """
 
+from io import BytesIO
+from pathlib import Path
 import streamlit as st
 from PIL import Image
+import plotly.graph_objects as go
+import pandas as pd
 
 from ecg_lab.config import (
     ColorPalette,
@@ -15,6 +19,13 @@ from ecg_lab.config import (
     DISCLAIMER_HARDWARE_ABSENT,
 )
 from ecg_lab.validation import validate_image_bytes, validate_image_file
+from ecg_lab.digitization import (
+    digitize_ecg_image,
+    DigitizationStatus,
+    CalibrationStatus,
+    AmplitudeUnit,
+    LeadSignal,
+)
 
 
 # ==============================================================================
@@ -27,6 +38,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
 
 def inject_editorial_theme():
     """Inject typography and color tokens adhering to Quiet Academic Editorial design."""
@@ -54,19 +66,19 @@ def inject_editorial_theme():
     }}
 
     h1 {{
-        font-size: 2.25rem !important;
+        font-size: 2.2rem !important;
         margin-bottom: 0.5rem !important;
     }}
 
     h2 {{
-        font-size: 1.65rem !important;
+        font-size: 1.55rem !important;
         border-bottom: 1px solid {ColorPalette.BORDER_DIVIDER};
         padding-bottom: 0.4rem;
         margin-top: 1.5rem !important;
     }}
 
     h3 {{
-        font-size: 1.25rem !important;
+        font-size: 1.2rem !important;
     }}
 
     /* Sidebar Styling */
@@ -80,7 +92,7 @@ def inject_editorial_theme():
         background-color: #FFFFFF;
         border: 1px solid {ColorPalette.BORDER_DIVIDER};
         border-radius: 4px;
-        padding: 1.2rem;
+        padding: 1.0rem;
         box-shadow: none !important;
     }}
 
@@ -124,7 +136,57 @@ def inject_editorial_theme():
     """
     st.markdown(css, unsafe_allow_html=True)
 
+
 inject_editorial_theme()
+
+
+def create_lead_chart(lead_name: str, lead_sig: LeadSignal) -> go.Figure:
+    """Create a crisp Plotly chart for a single digitized lead waveform."""
+    fig = go.Figure()
+
+    x_vals = lead_sig.sample_indices
+    y_vals = lead_sig.samples
+
+    fig.add_trace(
+        go.Scatter(
+            x=x_vals,
+            y=y_vals,
+            mode="lines",
+            line=dict(color="#1B2022", width=1.75),
+            name=f"Lead {lead_name}",
+            hovertemplate="Index: %{x}<br>Relative Amp: %{y:.3f}<extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        title=dict(
+            text=f"<b>Lead {lead_name}</b> (Confidence: {lead_sig.confidence:.2f})",
+            font=dict(family="IBM Plex Sans", size=13, color="#252722"),
+            x=0.03,
+            y=0.92,
+        ),
+        margin=dict(l=35, r=15, t=32, b=28),
+        height=190,
+        plot_bgcolor="#FAF9F5",
+        paper_bgcolor="#FFFFFF",
+        xaxis=dict(
+            title=dict(text="Sample Index", font=dict(size=10, color="#6F716B")),
+            showgrid=True,
+            gridcolor="#EBEAE4",
+            zeroline=False,
+            tickfont=dict(size=9, color="#6F716B"),
+        ),
+        yaxis=dict(
+            title=dict(text="Rel. Amp", font=dict(size=10, color="#6F716B")),
+            showgrid=True,
+            gridcolor="#EBEAE4",
+            zeroline=True,
+            zerolinecolor="#DCDDD5",
+            range=[-1.15, 1.15],
+            tickfont=dict(size=9, color="#6F716B"),
+        ),
+    )
+    return fig
 
 
 # ==============================================================================
@@ -176,7 +238,7 @@ if nav_choice == "Research Overview":
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Image Extraction Architecture", "12 Leads", "Morphological & U-Net")
+        st.metric("Image Extraction Architecture", "12 Leads", "Morphological Baseline")
     with col2:
         st.metric("Benchmark Dataset", "PTB-XL v1.0.3", "21,801 Records")
     with col3:
@@ -201,24 +263,49 @@ if nav_choice == "Research Overview":
 # ==============================================================================
 
 elif nav_choice == "ECG Image Lab":
-    st.markdown("# Workflow A: ECG Image Ingestion & Validation")
+    st.markdown("# Workflow A: ECG Image Ingestion & Digitization")
     st.markdown(
         "Upload scanned or photographed 12-lead electrocardiograms to inspect structural fidelity, "
-        "dimensions, color channels, and lead integrity."
+        "extract continuous 1D waveforms across all 12 leads, and export validated data."
     )
 
-    uploaded_file = st.file_uploader(
-        "Select ECG Scan (JPEG, PNG, TIFF)",
-        type=list(ValidationLimits.ALLOWED_EXTENSIONS),
-        help="Maximum file size: 25 MB. Minimum resolution: 400x300.",
+    input_mode = st.radio(
+        "Input Selection Mode",
+        ["Upload Local ECG Scan", "Preloaded Deterministic Benchmark", "Historical Reference Scan"],
+        horizontal=True,
     )
 
-    if uploaded_file is not None:
-        file_bytes = uploaded_file.read()
-        validation = validate_image_bytes(file_bytes, filename=uploaded_file.name)
+    active_bytes = None
+    active_filename = None
+
+    if input_mode == "Upload Local ECG Scan":
+        uploaded_file = st.file_uploader(
+            "Select ECG Scan (JPEG, PNG, TIFF)",
+            type=list(ValidationLimits.ALLOWED_EXTENSIONS),
+            help="Maximum file size: 25 MB. Minimum resolution: 400x300.",
+        )
+        if uploaded_file is not None:
+            active_bytes = uploaded_file.read()
+            active_filename = uploaded_file.name
+
+    elif input_mode == "Preloaded Deterministic Benchmark":
+        bench_path = Path("sample_data/synthetic_12lead.png")
+        if bench_path.is_file():
+            active_bytes = bench_path.read_bytes()
+            active_filename = bench_path.name
+            st.info("Loaded deterministic synthetic 12-lead benchmark pattern (`synthetic_12lead.png`).")
+
+    else:
+        hist_path = Path("legacy/test_image.jpg")
+        if hist_path.is_file():
+            active_bytes = hist_path.read_bytes()
+            active_filename = hist_path.name
+            st.info("Loaded historical clinical scan template (`legacy/test_image.jpg`).")
+
+    if active_bytes is not None:
+        validation = validate_image_bytes(active_bytes, filename=active_filename)
 
         if validation.is_valid:
-            st.success(f"✓ {validation.message}")
             meta = validation.metadata
 
             # Metadata Display
@@ -228,19 +315,115 @@ elif nav_choice == "ECG Image Lab":
             c3.metric("Aspect Ratio", f"{meta.aspect_ratio}")
             c4.metric("File Size", f"{round(meta.size_bytes / 1024, 1)} KB")
 
-            # Warnings
             if validation.warnings:
                 for w in validation.warnings:
                     st.warning(f"Advisory: {w}")
 
-            # Image Preview
-            image = Image.open(uploaded_file)
-            st.image(image, caption=f"Uploaded ECG Scan: {uploaded_file.name}", use_container_width=True)
+            with st.expander("Inspect Source Image", expanded=False):
+                img = Image.open(BytesIO(active_bytes))
+                st.image(img, caption=f"Source Document: {active_filename}", use_container_width=True)
+
+            # Digitization Action Trigger
+            st.markdown("### Waveform Extraction Engine")
+            col_engine, col_btn = st.columns([2, 1])
+            with col_engine:
+                engine_choice = st.selectbox(
+                    "Digitization Method",
+                    ["Classical Morphological Baseline", "Open-ECG-Digitizer (Upstream Adapter)"],
+                    help="Classical baseline uses native CPU centroid tracking. Open-ECG adapter checks upstream runtime availability.",
+                )
+            with col_btn:
+                st.write("")
+                st.write("")
+                run_btn = st.button("Digitize 12-Lead Waveform", type="primary")
+
+            if run_btn:
+                with st.spinner("Processing lead regions and tracing continuous signals..."):
+                    engine_key = "open-ecg" if "Upstream" in engine_choice else "baseline"
+                    result = digitize_ecg_image(active_bytes, engine=engine_key)
+
+                st.markdown("---")
+
+                if result.status in (DigitizationStatus.SUCCESS, DigitizationStatus.PARTIAL):
+                    st.success(
+                        f"✓ Digitization Complete [{result.status.value}] — "
+                        f"Recovered {result.lead_count} leads in {result.runtime_ms:.1f} ms."
+                    )
+
+                    # Diagnostic Calibration Notice
+                    st.markdown(
+                        f"<div class='disclaimer-banner'>"
+                        f"<strong>Calibration Status:</strong> {result.calibration_status.value} · "
+                        f"<strong>Amplitude Units:</strong> {result.amplitude_unit.value}<br>"
+                        f"<em>Notice: Signals are in relative normalized coordinates. "
+                        f"Physical millivolt and millisecond calibration is not claimed without automated grid line detection.</em>"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
+
+                    if result.warnings:
+                        for rw in result.warnings:
+                            st.warning(rw)
+
+                    # Plotly Waveform Visualization Grid (3 columns x 4 rows)
+                    st.markdown("### Reconstructed 12-Lead Waveforms")
+                    lead_order = ["I", "aVR", "V1", "V4", "II", "aVL", "V2", "V5", "III", "aVF", "V3", "V6"]
+
+                    for r in range(0, len(lead_order), 3):
+                        cols = st.columns(3)
+                        for c_idx in range(3):
+                            l_idx = r + c_idx
+                            if l_idx < len(lead_order):
+                                lname = lead_order[l_idx]
+                                with cols[c_idx]:
+                                    if lname in result.leads and result.leads[lname].is_valid:
+                                        fig = create_lead_chart(lname, result.leads[lname])
+                                        st.plotly_chart(fig, use_container_width=True, key=f"plot_{lname}")
+                                    else:
+                                        st.error(f"Lead {lname}: Missing or unrecovered.")
+
+                    # Data Export Area
+                    st.markdown("### Export Digitized Waveforms")
+                    dcol1, dcol2, dcol3 = st.columns(3)
+
+                    # Long-form CSV
+                    long_csv = result.to_long_dataframe().to_csv(index=False)
+                    dcol1.download_button(
+                        label="Download Long-Form CSV",
+                        data=long_csv,
+                        file_name=f"{Path(active_filename).stem}_long.csv",
+                        mime="text/csv",
+                    )
+
+                    # Wide-form CSV
+                    wide_csv = result.to_wide_dataframe().to_csv(index=False)
+                    dcol2.download_button(
+                        label="Download Wide-Form CSV",
+                        data=wide_csv,
+                        file_name=f"{Path(active_filename).stem}_wide.csv",
+                        mime="text/csv",
+                    )
+
+                    # JSON Metadata Sidecar
+                    json_meta = result.to_json(indent=2)
+                    dcol3.download_button(
+                        label="Download JSON Metadata",
+                        data=json_meta,
+                        file_name=f"{Path(active_filename).stem}_meta.json",
+                        mime="application/json",
+                    )
+
+                elif result.status == DigitizationStatus.UNAVAILABLE:
+                    st.warning(f"⚠️ Engine Unavailable: {result.error_message}")
+                    for uw in result.warnings:
+                        st.info(f"Guidance: {uw}")
+                else:
+                    st.error(f"Digitization Failed [{result.status.value}]: {result.error_message}")
+
         else:
             st.error(f"Validation Failed [{validation.status.value}]: {validation.message}")
-
     else:
-        st.info("No file uploaded. Select an image file or navigate to 'Sample Benchmark Data' to inspect sample inputs.")
+        st.info("Select an input scan or choose a preloaded sample to begin digitization.")
 
 
 # ==============================================================================
@@ -294,15 +477,25 @@ elif nav_choice == "Sample Benchmark Data":
         unsafe_allow_html=True,
     )
 
-    sample_path = "sample_data/synthetic_sample.png"
-    result = validate_image_file(sample_path)
+    tab1, tab2 = st.tabs(["Synthetic 12-Lead Pattern", "Basic Test Grid"])
 
-    if result.is_valid:
-        img = Image.open(sample_path)
-        st.image(img, caption="Synthetic 1200x800 Test ECG Pattern (sample_data/synthetic_sample.png)", use_container_width=True)
-        st.json(result.to_dict())
-    else:
-        st.error(f"Sample asset verification failed: {result.message}")
+    with tab1:
+        syn_path = "sample_data/synthetic_12lead.png"
+        res_syn = validate_image_file(syn_path)
+        if res_syn.is_valid:
+            st.image(Image.open(syn_path), caption="Deterministic 12-Lead Fixture (sample_data/synthetic_12lead.png)", use_container_width=True)
+            st.json(res_syn.to_dict())
+            gt_df = pd.read_csv("sample_data/synthetic_12lead_gt.csv")
+            st.markdown(f"**Ground Truth Reference Samples:** {len(gt_df)} rows across 12 leads.")
+            st.dataframe(gt_df.head(10), use_container_width=True)
+
+    with tab2:
+        sample_path = "sample_data/synthetic_sample.png"
+        result = validate_image_file(sample_path)
+        if result.is_valid:
+            img = Image.open(sample_path)
+            st.image(img, caption="Synthetic 1200x800 Test ECG Pattern (sample_data/synthetic_sample.png)", use_container_width=True)
+            st.json(result.to_dict())
 
 
 # ==============================================================================
