@@ -48,31 +48,37 @@ code/
 │   ├── config.py              # Editorial design tokens & validation limits
 │   ├── models.py              # Typed dataclasses & validation result models
 │   ├── validation.py          # Robust image safety & format validation
-│   └── digitization/          # Subsystem for waveform digitization
+│   ├── digitization/          # Subsystem for waveform digitization (Workflow A)
+│   │   ├── __init__.py
+│   │   ├── types.py           # DigitizationResult, LeadSignal, Enums
+│   │   ├── adapter.py         # ECGDigitizer protocol & Open-ECG adapter
+│   │   ├── baseline.py        # Classical morphological centroid digitizer
+│   │   └── service.py         # High-level dispatch & CSV/JSON export
+│   └── waveform_ml/           # Subsystem for digital waveform ML (Workflow B)
 │       ├── __init__.py
-│       ├── types.py           # DigitizationResult, LeadSignal, Enums
-│       ├── adapter.py         # ECGDigitizer protocol & Open-ECG adapter
-│       ├── baseline.py        # Classical morphological centroid digitizer
-│       └── service.py         # High-level dispatch & CSV/JSON export
-├── tests/                     # Automated test suite
+│       ├── config.py          # Constants, official checksums, fold splits
+│       ├── dataset.py         # Metadata, SCP mapping, patient split integrity
+│       ├── features.py        # 148 deterministic signal features & cache
+│       ├── models.py          # Prevalence baseline, One-vs-Rest LR, verified joblib
+│       ├── train.py           # Training pipeline & validation threshold tuning
+│       ├── evaluate.py        # Multi-label metrics (Precision, Recall, F1, PR-AUC)
+│       └── cli.py             # Unified CLI commands
+├── tests/                     # Automated test suite (47 unit & integration tests)
 │   ├── __init__.py
-│   ├── test_validation.py     # Unit tests for input validation & safeguards
-│   └── test_digitization.py   # Unit tests for waveform extraction & exports
+│   ├── test_validation.py         # Phase 1: Input validation & security safeguards
+│   ├── test_digitization.py       # Phase 2: Morphological digitizer & synthetic benchmark
+│   ├── test_waveform_dataset.py   # Phase 3: Metadata loading & SCP-statement mapping
+│   ├── test_waveform_splits.py    # Phase 3: Patient split integrity & leakage assertions
+│   ├── test_waveform_features.py  # Phase 3: Deterministic 148 features & cache invalidation
+│   ├── test_waveform_metrics.py   # Phase 3: Multi-label evaluation & threshold tuning
+│   └── test_waveform_isolation.py # Phase 3: Cryptographic manifests & legacy quarantine
 ├── sample_data/               # Small, licensed test assets & synthetic benchmarks
-│   ├── README.md              # Sample data manifest & privacy policies
-│   ├── synthetic_12lead.png   # Synthetic 12-lead ECG test image
-│   ├── synthetic_12lead_gt.csv# Exact ground truth signals (12 x 255 samples)
-│   ├── synthetic_12lead_meta.json
-│   └── synthetic_sample.png   # Simple 1200x800 test ECG grid pattern
 ├── legacy/                    # Quarantined historical artifacts (March 2025)
-│   ├── README.md              # Historical context & security notices
-│   ├── test.py                # Legacy fixed-crop inference script
-│   ├── test1.ipynb            # Legacy notebook with recorded PCA failure traces
-│   └── *.pkl                  # Historical PCA and ensemble classifier artifacts
 ├── docs/                      # Technical reports & audit documentation
 │   ├── AUDIT_REPORT.md        # Comprehensive Phase 0 technical audit report
 │   ├── PHASE2_FEASIBILITY.md  # Feasibility assessment for upstream digitizer
-│   └── PHASE2_REPORT.md       # Comprehensive Phase 2 implementation report
+│   ├── PHASE2_REPORT.md       # Comprehensive Phase 2 implementation report
+│   └── PHASE3_REPORT.md       # Comprehensive Phase 3 implementation report
 ├── requirements.txt           # Pinned, reproducible Python dependencies
 └── README.md                  # This documentation
 ```
@@ -89,7 +95,7 @@ code/
 
 1. **Activate the Virtual Environment:**
    ```bash
-   # From the project root (code/)
+   # From code/
    source .venv/bin/activate
    ```
 
@@ -102,9 +108,21 @@ code/
    ```bash
    pytest -v
    ```
-   *Expected output: 23 passed tests in ~2.0s.*
+   *Expected output: 47 passed tests in ~3.0s (100% pass rate, zero skips).*
 
-4. **Launch Application:**
+4. **Digital Waveform ML Pipeline (CLI):**
+   ```bash
+   # Validate dataset metadata and verify zero patient leakage
+   python -m ecg_lab.waveform_ml.cli validate --verify-checksums
+
+   # Extract 148 features and build cache
+   python -m ecg_lab.waveform_ml.cli extract-features
+
+   # Train naive baseline and lightweight model (thresholds tuned on fold 9 only)
+   python -m ecg_lab.waveform_ml.cli train
+   ```
+
+5. **Launch Application:**
    ```bash
    streamlit run app.py
    ```

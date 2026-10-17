@@ -1,0 +1,354 @@
+"""Dataset loading, metadata validation, SCP label mapping, and patient split integrity.
+
+Handles PTB-XL v1.0.3 100 Hz records and guarantees zero patient overlap across folds.
+"""
+
+import ast
+import hashlib
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+import numpy as np
+import pandas as pd
+import requests
+
+from ecg_lab.waveform_ml.config import (
+    DEFAULT_DATA_DIR,
+    EXPECTED_LEADS_COUNT,
+    EXPECTED_SAMPLES_PER_RECORD,
+    LEAD_NAMES,
+    OFFICIAL_CHECKSUMS,
+    PHYSIONET_S3_BASE_URL,
+    SAMPLING_RATE_HZ,
+    TARGET_SUPERCLASSES,
+    TEST_FOLDS,
+    TRAIN_FOLDS,
+    VAL_FOLDS,
+)
+
+
+class PatientOverlapError(ValueError):
+    """Raised when patient identifiers leak across train, validation, or test folds."""
+    pass
+
+
+class MalformedRecordError(RuntimeError):
+    """Raised when a WFDB signal record is corrupt, non-finite, or malformed."""
+    pass
+
+
+class ChecksumMismatchError(ValueError):
+    """Raised when an official dataset file does not match its cryptographic hash."""
+    pass
+
+
+def compute_file_sha256(filepath: Union[str, Path]) -> str:
+    """Compute the SHA-256 digest of a local file in bounded chunks."""
+    h = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def load_scp_mapping(scp_statements_path: Union[str, Path]) -> Dict[str, str]:
+    """Load SCP-ECG statements and extract only diagnostic statements mapped to target superclasses.
+
+    Only statements where diagnostic == 1.0 and diagnostic_class is populated
+    with one of ('NORM', 'MI', 'STTC', 'CD', 'HYP') are mapped.
+    All non-diagnostic statements (rhythm, form, etc.) are excluded from diagnostic mapping.
+    """
+    path = Path(scp_statements_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"SCP statements file not found: {path}")
+
+    df = pd.read_csv(path, index_col=0)
+    if "diagnostic" not in df.columns or "diagnostic_class" not in df.columns:
+        raise ValueError(
+            f"Invalid scp_statements.csv schema. Expected 'diagnostic' and 'diagnostic_class' columns, got {df.columns.tolist()}"
+        )
+
+    # Filter explicitly designated diagnostic codes
+    diag_df = df[df["diagnostic"] == 1.0]
+    mapping: Dict[str, str] = {}
+    for code, row in diag_df.iterrows():
+        diag_class = row["diagnostic_class"]
+        if pd.notna(diag_class) and str(diag_class) in TARGET_SUPERCLASSES:
+            mapping[str(code)] = str(diag_class)
+
+    return mapping
+
+
+def parse_scp_codes_to_superclasses(
+    scp_codes_str: Any,
+    code_to_super: Dict[str, str],
+) -> List[str]:
+    """Parse a record's scp_codes string into a list of mapped diagnostic superclasses.
+
+    Guarantees:
+    - Only codes with positive likelihood (weight > 0) are evaluated.
+    - Only codes explicitly in code_to_super are mapped.
+    - Preserves multi-label nature (multiple superclasses can be positive).
+    - Returns sorted unique superclasses.
+    """
+    if pd.isna(scp_codes_str):
+        return []
+
+    if isinstance(scp_codes_str, dict):
+        codes_dict = scp_codes_str
+    elif isinstance(scp_codes_str, str):
+        try:
+            codes_dict = ast.literal_eval(scp_codes_str)
+        except (ValueError, SyntaxError):
+            return []
+    else:
+        return []
+
+    if not isinstance(codes_dict, dict):
+        return []
+
+    classes: Set[str] = set()
+    for code, score in codes_dict.items():
+        try:
+            score_num = float(score)
+        except (ValueError, TypeError):
+            continue
+        if score_num > 0 and code in code_to_super:
+            classes.add(code_to_super[code])
+
+    return sorted(list(classes))
+
+
+def load_ptbxl_metadata(
+    data_dir: Union[str, Path] = DEFAULT_DATA_DIR,
+    verify_checksums: bool = False,
+) -> pd.DataFrame:
+    """Load ptbxl_database.csv and map scp_codes to multi-label superclasses.
+
+    Adds binary indicator columns: y_NORM, y_MI, y_STTC, y_CD, y_HYP.
+    """
+    path = Path(data_dir)
+    db_file = path / "ptbxl_database.csv"
+    scp_file = path / "scp_statements.csv"
+
+    if not db_file.is_file():
+        raise FileNotFoundError(
+            f"PTB-XL database metadata missing at {db_file}. Run CLI download or place official files there."
+        )
+    if not scp_file.is_file():
+        raise FileNotFoundError(
+            f"PTB-XL scp_statements.csv missing at {scp_file}."
+        )
+
+    if verify_checksums:
+        for fname, expected_hash in OFFICIAL_CHECKSUMS.items():
+            fpath = path / fname
+            if fpath.is_file():
+                actual_hash = compute_file_sha256(fpath)
+                if actual_hash != expected_hash:
+                    raise ChecksumMismatchError(
+                        f"Checksum mismatch for {fname}: expected {expected_hash}, got {actual_hash}"
+                    )
+
+    code_to_super = load_scp_mapping(scp_file)
+    df = pd.read_csv(db_file, index_col="ecg_id")
+
+    # Required columns check
+    required_cols = {"patient_id", "scp_codes", "strat_fold", "filename_lr"}
+    missing = required_cols - set(df.columns)
+    if missing:
+        raise ValueError(f"ptbxl_database.csv is missing required columns: {missing}")
+
+    # Map superclasses
+    df["diagnostic_superclasses"] = df["scp_codes"].apply(
+        lambda x: parse_scp_codes_to_superclasses(x, code_to_super)
+    )
+    df["num_diagnostic_labels"] = df["diagnostic_superclasses"].apply(len)
+    df["has_diagnostic_label"] = df["num_diagnostic_labels"] > 0
+
+    # Binary indicator matrix
+    for sc in TARGET_SUPERCLASSES:
+        df[f"y_{sc}"] = df["diagnostic_superclasses"].apply(lambda classes: int(sc in classes))
+
+    return df
+
+
+def validate_split_integrity(
+    df: pd.DataFrame,
+    train_folds: Tuple[int, ...] = TRAIN_FOLDS,
+    val_folds: Tuple[int, ...] = VAL_FOLDS,
+    test_folds: Tuple[int, ...] = TEST_FOLDS,
+) -> Dict[str, Any]:
+    """Verify zero patient overlap across train, validation, and test fold splits.
+
+    Raises PatientOverlapError if any patient_id appears in more than one partition.
+    """
+    if "patient_id" not in df.columns or "strat_fold" not in df.columns:
+        raise ValueError("DataFrame must contain 'patient_id' and 'strat_fold' columns.")
+
+    train_mask = df["strat_fold"].isin(train_folds)
+    val_mask = df["strat_fold"].isin(val_folds)
+    test_mask = df["strat_fold"].isin(test_folds)
+
+    train_pts = set(df.loc[train_mask, "patient_id"].dropna())
+    val_pts = set(df.loc[val_mask, "patient_id"].dropna())
+    test_pts = set(df.loc[test_mask, "patient_id"].dropna())
+
+    train_val_overlap = train_pts.intersection(val_pts)
+    train_test_overlap = train_pts.intersection(test_pts)
+    val_test_overlap = val_pts.intersection(test_pts)
+
+    if train_val_overlap or train_test_overlap or val_test_overlap:
+        err_msg = [
+            f"FATAL: Patient leakage detected between splits!",
+            f"- Train vs Val overlap: {len(train_val_overlap)} patients",
+            f"- Train vs Test overlap: {len(train_test_overlap)} patients",
+            f"- Val vs Test overlap: {len(val_test_overlap)} patients",
+        ]
+        raise PatientOverlapError("\n".join(err_msg))
+
+    stats = {
+        "train_records": int(train_mask.sum()),
+        "val_records": int(val_mask.sum()),
+        "test_records": int(test_mask.sum()),
+        "train_patients": len(train_pts),
+        "val_patients": len(val_pts),
+        "test_patients": len(test_pts),
+        "train_val_overlap": 0,
+        "train_test_overlap": 0,
+        "val_test_overlap": 0,
+        "split_integrity_verified": True,
+    }
+    return stats
+
+
+def read_wfdb_record(
+    record_path_or_prefix: Union[str, Path],
+    expected_fs: int = SAMPLING_RATE_HZ,
+    expected_samples: int = EXPECTED_SAMPLES_PER_RECORD,
+    expected_leads: int = EXPECTED_LEADS_COUNT,
+) -> Tuple[np.ndarray, Dict[str, Any]]:
+    """Read a 12-lead WFDB record, preserving physical units (mV) and sampling rate.
+
+    Returns:
+        signal: np.ndarray of shape (samples, leads) with physical values in millivolts (mV).
+        metadata: Dict containing fs, units, lead_names, comments, length.
+
+    Raises:
+        FileNotFoundError if record header or dat file does not exist.
+        MalformedRecordError if signal contains non-finite values or unexpected dimensions.
+    """
+    import wfdb
+
+    record_str = str(record_path_or_prefix)
+    # Strip extension if passed
+    if record_str.endswith(".hea") or record_str.endswith(".dat"):
+        record_str = record_str[:-4]
+
+    hea_file = Path(f"{record_str}.hea")
+    if not hea_file.is_file():
+        raise FileNotFoundError(f"WFDB header file missing: {hea_file}")
+
+    try:
+        record = wfdb.rdrecord(record_str)
+    except Exception as e:
+        raise MalformedRecordError(f"Failed to read WFDB record {record_str}: {e}") from e
+
+    signal = record.p_signal
+    if signal is None:
+        raise MalformedRecordError(f"WFDB record {record_str} returned None p_signal.")
+
+    # Validate finite values
+    if not np.isfinite(signal).all():
+        raise MalformedRecordError(
+            f"WFDB record {record_str} contains NaN or Infinite voltage samples."
+        )
+
+    # Validate shape
+    if signal.ndim != 2:
+        raise MalformedRecordError(
+            f"Expected 2D signal array (samples, leads), got ndim={signal.ndim}."
+        )
+
+    samples, leads = signal.shape
+    if leads != expected_leads:
+        raise MalformedRecordError(
+            f"Expected {expected_leads} leads, got {leads} leads in {record_str}."
+        )
+
+    meta = {
+        "fs": record.fs,
+        "sig_len": record.sig_len,
+        "sig_name": list(record.sig_name) if record.sig_name else list(LEAD_NAMES),
+        "units": list(record.units) if record.units else ["mV"] * leads,
+        "comments": list(record.comments) if record.comments else [],
+    }
+
+    return signal, meta
+
+
+def download_ptbxl_metadata(
+    dest_dir: Union[str, Path] = DEFAULT_DATA_DIR,
+    base_url: str = PHYSIONET_S3_BASE_URL,
+) -> Dict[str, Path]:
+    """Download official metadata files from PhysioNet/AWS Open Data and verify checksums."""
+    dest = Path(dest_dir)
+    dest.mkdir(parents=True, exist_ok=True)
+
+    files_to_download = [
+        "ptbxl_database.csv",
+        "scp_statements.csv",
+        "LICENSE.txt",
+    ]
+
+    saved_paths: Dict[str, Path] = {}
+    for filename in files_to_download:
+        target = dest / filename
+        if not target.is_file():
+            url = f"{base_url}{filename}"
+            resp = requests.get(url, stream=True, timeout=30)
+            resp.raise_for_status()
+            with open(target, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=65536):
+                    f.write(chunk)
+
+        # Verify hash if in checksum registry
+        if filename in OFFICIAL_CHECKSUMS:
+            actual = compute_file_sha256(target)
+            expected = OFFICIAL_CHECKSUMS[filename]
+            if actual != expected:
+                raise ChecksumMismatchError(
+                    f"Checksum mismatch for {filename}: expected {expected}, got {actual}"
+                )
+
+        saved_paths[filename] = target
+
+    return saved_paths
+
+
+def download_single_record(
+    record_rel_path: str,
+    dest_dir: Union[str, Path] = DEFAULT_DATA_DIR,
+    base_url: str = PHYSIONET_S3_BASE_URL,
+) -> Path:
+    """Download a single 100 Hz record (.hea and .dat) from the official repository."""
+    dest = Path(dest_dir)
+    # record_rel_path e.g. "records100/00000/00001_lr"
+    clean_rel = record_rel_path.replace("\\", "/")
+    if clean_rel.endswith(".hea") or clean_rel.endswith(".dat"):
+        clean_rel = clean_rel[:-4]
+
+    target_prefix = dest / clean_rel
+    target_prefix.parent.mkdir(parents=True, exist_ok=True)
+
+    for ext in (".hea", ".dat"):
+        target_file = target_prefix.with_suffix(ext)
+        if not target_file.is_file():
+            url = f"{base_url}{clean_rel}{ext}"
+            resp = requests.get(url, stream=True, timeout=30)
+            resp.raise_for_status()
+            with open(target_file, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=65536):
+                    f.write(chunk)
+
+    return target_prefix
