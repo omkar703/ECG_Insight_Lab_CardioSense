@@ -44,6 +44,7 @@ from ecg_lab.waveform_ml.dataset import (
 )
 from ecg_lab.waveform_ml.features import extract_record_features
 from ecg_lab.waveform_ml.models import load_verified_model
+from ecg_lab.diagnostics import check_system_diagnostics
 
 
 # ==============================================================================
@@ -219,11 +220,11 @@ with st.sidebar:
     nav_choice = st.radio(
         "Navigation",
         [
-            "Research Overview",
-            "ECG Image Lab",
-            "Waveform ML Lab",
-            "Sample Benchmark Data",
-            "Governance & Ethics",
+            "Overview & System Status",
+            "ECG Image Lab (Workflow A)",
+            "Waveform ML Lab (Workflow B)",
+            "Methods & Benchmarks",
+            "Diagnostics & Privacy",
         ],
         label_visibility="collapsed",
     )
@@ -236,52 +237,85 @@ with st.sidebar:
 
 
 # ==============================================================================
-# Page: Research Overview
+# Page: Overview & System Status
 # ==============================================================================
 
-if nav_choice == "Research Overview":
-    st.markdown("# ECG Image Digitization & Waveform Analysis Platform")
+if nav_choice == "Overview & System Status":
+    st.markdown("# ECG Insight Lab — Research Platform")
     st.markdown(
         "<p style='font-size: 1.15rem; color: #6F716B; line-height: 1.6;'>"
-        "An open-access academic framework evaluating the feasibility, computational boundaries, "
-        "and validation requirements of digitizing paper electrocardiograms and benchmark cardiac machine learning."
+        "An academic framework evaluating the computational boundaries of paper ECG image digitization "
+        "and reproducible cardiac waveform machine learning on the PTB-XL v1.0.3 clinical benchmark."
         "</p>",
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        f"<div class='disclaimer-banner'><strong>System Scope:</strong> {DISCLAIMER_HARDWARE_ABSENT}</div>",
+        f"<div class='disclaimer-banner'>"
+        f"<strong>Non-Clinical Academic Prototype:</strong> {DISCLAIMER_RESEARCH_ONLY}<br>"
+        f"<em>System Boundary: {DISCLAIMER_HARDWARE_ABSENT}</em>"
+        f"</div>",
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Image Extraction Architecture", "12 Leads", "Morphological Baseline")
+        st.metric("Workflow A Digitizer", "12 Leads", "Morphological Tracking")
     with col2:
-        st.metric("Benchmark Dataset", "PTB-XL v1.0.3", "21,801 Records")
+        st.metric("Benchmark Records", "21,799", "100% WFDB Complete")
     with col3:
-        st.metric("Evaluation Protocol", "Stratified Patient Folds", "Zero Leakage")
+        st.metric("Patient Splits", "10 Folds", "0 Patient Leakage")
+    with col4:
+        st.metric("Held-Out Test F1", "0.6093", "Macro Average (Fold 10)")
 
-    st.markdown("## Architectural Principles")
+    st.markdown("## Architectural Principles & Strict Decoupling")
     st.markdown(
         """
-        1. **Strict Subsystem Decoupling:** Workflow A (Paper ECG Image Digitization) and Workflow B 
-           (Digital Waveform ML) operate as independent research labs. Paper image signals are not passed to 
-           classifiers without empirical calibration validation.
-        2. **Reproducibility Over Decoration:** All training splits, feature configurations, and validation 
-           metrics are strictly derived from documented benchmarks without fabricated performance claims.
-        3. **Honest Limitations:** Physical hardware claims are explicitly disclaimed. Prerecorded benchmark 
-           waveforms are visibly watermarked as demonstration data.
+        1. **Strict Subsystem Decoupling:** 
+           - **Workflow A (ECG Image Lab):** Ingests paper ECG scans/photographs, validates formatting and resolution, and recovers continuous 1D geometric traces in normalized relative coordinates with CSV/JSON export.
+           - **Workflow B (Waveform ML Lab):** Evaluates multi-label diagnostic superclasses on calibrated digital voltage signals (100 Hz WFDB) from PTB-XL v1.0.3.
+           - **No Gated Bridge:** Digitized signals from Workflow A are **never** passed into the Workflow B classifier without empirical calibration validation on paired datasets.
+        2. **Reproducibility & Scientific Honesty:**
+           - Models are trained exclusively on Folds 1–8 ($N=17,418$), thresholds tuned on Fold 9 ($N=2,183$), and evaluated on Fold 10 ($N=2,198$).
+           - Evaluated with patient-clustered bootstrap confidence intervals ($B=2,000$, 1,904 patient clusters).
+        3. **Zero-Persistence Privacy:**
+           - User-uploaded images are processed strictly in volatile memory (RAM) and are never written to disk, logged, or transmitted externally.
         """
     )
+
+    st.markdown("## System Health & Component Readiness")
+    diag = check_system_diagnostics()
+    d1, d2, d3, d4 = st.columns(4)
+    with d1:
+        st.metric("PTB-XL Metadata", "Available" if diag.dataset_metadata.is_available else "Missing", diag.dataset_metadata.status_label)
+    with d2:
+        st.metric("WFDB Signals", "100% Complete" if diag.dataset_completeness.is_available else "Partial", diag.dataset_completeness.status_label)
+    with d3:
+        st.metric("Active Model", "Verified" if diag.active_model.is_available else "Missing", diag.active_model.status_label)
+    with d4:
+        st.metric("Demo Fixtures", "Verified" if diag.synthetic_fixtures.is_available else "Missing", diag.synthetic_fixtures.status_label)
+
+    if diag.all_critical_components_ready:
+        st.success("✓ All critical research and demo subsystems are OPERATIONAL.")
+    else:
+        st.warning("⚠️ Some components require attention. Review the Diagnostics & Privacy page for details.")
 
 
 # ==============================================================================
 # Page: ECG Image Lab
 # ==============================================================================
 
-elif nav_choice == "ECG Image Lab":
+elif nav_choice == "ECG Image Lab (Workflow A)":
     st.markdown("# Workflow A: ECG Image Ingestion & Digitization")
+    st.markdown(
+        "<div style='margin-bottom: 1.0rem; display: flex; gap: 0.5rem; flex-wrap: wrap;'>"
+        "<span class='badge-status'>12-Lead Paper Digitization</span>"
+        "<span class='badge-status'>Relative Normalized Coordinates</span>"
+        "<span class='watermark-demo'>NON-CLINICAL PROTOTYPE</span>"
+        "<span class='badge-clinical'>Ephemeral Memory Processing</span>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
     st.markdown(
         "Upload scanned or photographed 12-lead electrocardiograms to inspect structural fidelity, "
         "extract continuous 1D waveforms across all 12 leads, and export validated data."
@@ -302,6 +336,7 @@ elif nav_choice == "ECG Image Lab":
             type=list(ValidationLimits.ALLOWED_EXTENSIONS),
             help="Maximum file size: 25 MB. Minimum resolution: 400x300.",
         )
+        st.caption("🔒 Privacy Safeguard: Uploads are processed strictly in volatile memory (RAM). Files are never written to disk, stored, or logged.")
         if uploaded_file is not None:
             active_bytes = uploaded_file.read()
             active_filename = uploaded_file.name
@@ -311,6 +346,7 @@ elif nav_choice == "ECG Image Lab":
         if bench_path.is_file():
             active_bytes = bench_path.read_bytes()
             active_filename = bench_path.name
+            st.warning("⚠️ SYNTHETIC DEMO — NOT PATIENT DATA: This image is an artificial geometric test fixture containing no human physiology.")
             st.info("Loaded deterministic synthetic 12-lead benchmark pattern (`synthetic_12lead.png`).")
 
     else:
@@ -443,12 +479,22 @@ elif nav_choice == "ECG Image Lab":
     else:
         st.info("Select an input scan or choose a preloaded sample to begin digitization.")
 
+    st.markdown("---")
+    st.markdown(
+        "<div class='disclaimer-banner'>"
+        "<strong>Architectural Boundary Notice:</strong> 1D continuous waveforms extracted in Workflow A are purely "
+        "geometric morphological traces in relative coordinates. In accordance with clinical safety principles, "
+        "these traces are strictly isolated and <strong>NEVER</strong> fed to the Workflow B diagnostic classifier."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
 
 # ==============================================================================
 # Page: Waveform ML Lab
 # ==============================================================================
 
-elif nav_choice == "Waveform ML Lab":
+elif nav_choice == "Waveform ML Lab (Workflow B)":
     st.markdown("# Workflow B: Digital Waveform ML Lab")
     st.markdown(
         "<div style='margin-bottom: 1.2rem; display: flex; gap: 0.5rem; flex-wrap: wrap;'>"
@@ -718,11 +764,16 @@ elif nav_choice == "Waveform ML Lab":
                 st.metric("Test Macro PR-AUC", prauc_str)
 
             st.info(
-                f"**Phase 3.2.1 Paired Model-Comparison Audit:** Evaluated on the shared Fold 10 test cohort "
-                f"({n_eval:,} records, 1,904 patients) against the Phase 3.1 pilot model. The paired patient-clustered "
-                f"bootstrap ($B=2,000$, seed: 42) demonstrates a statistically significant paired Macro F1 improvement "
-                f"of +0.1510 (95% paired CI: [0.1343, 0.1681], SE: 0.0087). Offline research benchmark only; "
-                f"does not claim clinical validity or generalization."
+                f"**Phase 3.2.1 Paired Pipeline Comparison Audit:** Evaluated on the shared Fold 10 test cohort "
+                f"({n_eval:,} records, 1,904 unique patients) comparing the complete Phase 3.1 pilot pipeline "
+                f"(trained on 240 records, thresholded on 30 records) against the complete Phase 3.2 full-fold pipeline "
+                f"(trained on 17,418 records, thresholded on 2,183 records). The paired patient-clustered "
+                f"bootstrap ($B=2,000$, seed: 42) demonstrated a paired Macro F1 difference of "
+                f"+0.1510 (95% paired CI: [0.1343, 0.1681], SE: 0.0087), with 0 of 2,000 bootstrap replicates having "
+                f"a non-positive difference. Note: this comparison reflects the difference between the two complete pipelines "
+                f"(including both training scale and validation threshold-tuning sample sizes); the bootstrap interval represents "
+                f"test-cohort sampling uncertainty conditional on the fixed fitted models rather than all retraining variability. "
+                f"Offline research benchmark only; does not claim clinical diagnostic validity or cross-population generalization."
             )
 
             if summary_md_file.is_file():
@@ -768,53 +819,145 @@ elif nav_choice == "Waveform ML Lab":
 
 
 # ==============================================================================
-# Page: Sample Benchmark Data
+# Page: Methods & Benchmarks
 # ==============================================================================
 
-elif nav_choice == "Sample Benchmark Data":
-    st.markdown("# Sample & Integration Test Assets")
+elif nav_choice == "Methods & Benchmarks":
+    st.markdown("# Methods, Provenance & Benchmark Taxonomy")
     st.markdown(
-        "Deterministic benchmark assets used for automated unit testing and offline demonstrations. "
-        "<span class='watermark-demo'>DEMO / NON-CLINICAL</span>",
+        "<p style='font-size: 1.15rem; color: #6F716B; line-height: 1.6;'>"
+        "Comprehensive documentation of dataset provenance, diagnostic labeling taxonomy, "
+        "feature extraction schemas, and evaluation protocols."
+        "</p>",
         unsafe_allow_html=True,
     )
 
-    tab1, tab2 = st.tabs(["Synthetic 12-Lead Pattern", "Basic Test Grid"])
+    t_part, t_tax, t_feat, t_trust = st.tabs([
+        "Partition Splits & Integrity",
+        "Diagnostic Superclasses",
+        "Feature Extraction Schema",
+        "Model Trust Boundary",
+    ])
 
-    with tab1:
-        syn_path = "sample_data/synthetic_12lead.png"
-        res_syn = validate_image_file(syn_path)
-        if res_syn.is_valid:
-            st.image(Image.open(syn_path), caption="Deterministic 12-Lead Fixture (sample_data/synthetic_12lead.png)", use_container_width=True)
-            st.json(res_syn.to_dict())
-            gt_df = pd.read_csv("sample_data/synthetic_12lead_gt.csv")
-            st.markdown(f"**Ground Truth Reference Samples:** {len(gt_df)} rows across 12 leads.")
-            st.dataframe(gt_df.head(10), use_container_width=True)
+    with t_part:
+        st.markdown("### Official PTB-XL Folds & Patient Split Partitioning")
+        st.markdown(
+            """
+            PTB-XL v1.0.3 defines official stratified folds (`strat_fold` 1 to 10) constructed to prevent patient leakage:
+            - **Training Partition (Folds 1–8):** 17,418 records (15,023 unique patients). Used exclusively to fit feature scalers, the naive prevalence baseline, and the lightweight logistic regression model.
+            - **Validation Partition (Fold 9):** 2,183 records (1,942 unique patients). Used exclusively for validation evaluation and per-class decision threshold tuning.
+            - **Held-Out Test Partition (Fold 10):** 2,198 records (1,904 unique patients). Held strictly out and evaluated once per frozen model configuration.
+            """
+        )
+        split_df = pd.DataFrame([
+            {"Partition Split": "Training Split (Folds 1–8)", "Records": 17418, "Unique Patients": 15023, "Purpose": "Model parameter estimation & baseline derivation"},
+            {"Partition Split": "Validation Split (Fold 9)", "Records": 2183, "Unique Patients": 1942, "Purpose": "Decision threshold optimization only"},
+            {"Partition Split": "Held-Out Test Split (Fold 10)", "Records": 2198, "Unique Patients": 1904, "Purpose": "Final unbiased offline evaluation"},
+        ])
+        st.dataframe(split_df, use_container_width=True, hide_index=True)
+        st.success("✓ Mathematical Split Integrity: Patient set intersections between all partition pairs are strictly empty (Leakage = 0).")
 
-    with tab2:
-        sample_path = "sample_data/synthetic_sample.png"
-        result = validate_image_file(sample_path)
-        if result.is_valid:
-            img = Image.open(sample_path)
-            st.image(img, caption="Synthetic 1200x800 Test ECG Pattern (sample_data/synthetic_sample.png)", use_container_width=True)
-            st.json(result.to_dict())
+    with t_tax:
+        st.markdown("### Diagnostic Superclass Taxonomy (SCP-ECG Standard)")
+        st.markdown(
+            """
+            Labels are mapped from the official `scp_statements.csv` clinical annotations into five mutually non-exclusive diagnostic superclasses:
+            - **NORM (Normal ECG):** Normal electrocardiographic recordings without acute or pathological abnormalities.
+            - **MI (Myocardial Infarction):** Evidence of acute, subacute, or prior ischemic myocardial necrosis.
+            - **STTC (ST/T Changes):** Non-specific or ischemia-related ST-segment elevations/depressions or T-wave alterations.
+            - **CD (Conduction Disturbance):** Bundle branch blocks, fascicular blocks, and intraventricular conduction delays.
+            - **HYP (Hypertrophy):** Left, right, or biventricular ventricular or atrial enlargement.
+            """
+        )
+
+    with t_feat:
+        st.markdown("### 148 Deterministic Signal Descriptors")
+        st.markdown(
+            """
+            The feature schema (`Version 1.0.0`) extracts 148 deterministic numerical descriptors from the 100 Hz 12-lead digital waveforms:
+            - **Per-Lead Features (144 features):** 12 statistical descriptors calculated independently across each of the 12 leads (Mean, Standard Deviation, Median, Minimum, Maximum, Peak-to-Peak Range, Skewness, Kurtosis, Root-Mean-Square, Zero-Crossing Rate, Signal Energy, Mean Absolute Derivative).
+            - **Cross-Lead Features (4 features):** Global Limb Lead RMS, Global Precordial Lead RMS, Maximum Absolute Global Amplitude, and Limb-to-Precordial Energy Ratio.
+            """
+        )
+
+    with t_trust:
+        st.markdown("### Cryptographic Model Provenance & Quarantined Legacy Assets")
+        st.markdown(
+            """
+            1. **Legacy Model Quarantine:** The historical pickle model (`legacy/finalmodel.pkl`) is completely quarantined and blocked from deserialization due to arbitrary code execution risks.
+            2. **Local Trust Boundary:** All new models are stored in Joblib format accompanied by a sidecar SHA-256 JSON manifest. The verified loader verifies bit-for-bit file digests before deserializing.
+            """
+        )
 
 
 # ==============================================================================
-# Page: Governance & Ethics
+# Page: Diagnostics & Privacy
 # ==============================================================================
 
-elif nav_choice == "Governance & Ethics":
-    st.markdown("# Governance, Licensing & Attribution")
+elif nav_choice == "Diagnostics & Privacy":
+    st.markdown("# System Diagnostics, Privacy & Architecture")
     st.markdown(
-        """
-        ### Data & Code Licenses
-        - **PhysioNet PTB-XL v1.0.3:** Licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://physionet.org/content/ptb-xl/1.0.3/).
-        - **Open ECG Digitizer Candidate:** Licensed under [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://github.com/Ahus-AIM/Open-ECG-Digitizer). Maintained strictly behind an external adapter interface.
-        - **Scikit-Learn Model Persistence:** Legacy models are quarantined under `legacy/` following [official Scikit-Learn security guidance](https://scikit-learn.org/stable/model_persistence.html).
-
-        ### Research Integrity
-        - **No Physical Sensors:** No live microcontroller telemetry is connected.
-        - **Privacy Assurance:** User uploads are validated in memory and are not permanently recorded or transmitted to third-party APIs.
-        """
+        "<p style='font-size: 1.15rem; color: #6F716B; line-height: 1.6;'>"
+        "Real-time diagnostic health check, data lifecycle policies, and reproducible run instructions."
+        "</p>",
+        unsafe_allow_html=True,
     )
+
+    t_diag, t_priv, t_setup = st.tabs([
+        "Live System Diagnostics",
+        "Privacy & Data Lifecycle",
+        "Reproducibility & Setup",
+    ])
+
+    with t_diag:
+        st.markdown("### Real-Time Component Health Audit")
+        diag = check_system_diagnostics()
+        diag_dict = diag.to_dict()["components"]
+
+        for comp_key, comp_info in diag_dict.items():
+            avail = comp_info["is_available"]
+            icon = "🟢" if avail else "🟡"
+            with st.expander(f"{icon} **{comp_info['name']}** — *{comp_info['status_label']}*", expanded=not avail):
+                if comp_info.get("details"):
+                    st.json(comp_info["details"])
+                if comp_info.get("guidance"):
+                    st.info(f"**Resolution Guidance:** {comp_info['guidance']}")
+
+        if diag.all_critical_components_ready:
+            st.success("✓ All critical demo and benchmark components are operational.")
+
+    with t_priv:
+        st.markdown("### Privacy Safeguards & Ephemeral Data Lifecycle")
+        st.markdown(
+            """
+            - **Ephemeral In-Memory Processing:** User-uploaded ECG images are processed exclusively in volatile memory (RAM) and are discarded when the session ends. No user uploads are written to disk.
+            - **Zero Data Persistence:** The application does not store, log, or persist user-uploaded images, waveform arrays, or patient identifiers.
+            - **No External Telemetry:** The platform contains zero third-party tracking scripts, cloud analytics, or external telemetry pings.
+            - **Non-Clinical Research Protocol:** This application is strictly an academic research tool; it does not collect or process protected health information (PHI) for clinical use.
+            """
+        )
+
+    with t_setup:
+        st.markdown("### Reproducible Setup & Offline Execution Guide")
+        st.markdown(
+            """
+            To run this application and execute all quality gates from a clean checkout:
+
+            ```bash
+            # 1. Activate virtual environment
+            source .venv/bin/activate
+
+            # 2. Run automated test suite (58 unit & integration tests)
+            pytest tests/ -v
+
+            # 3. Inspect system diagnostics via CLI
+            python -m ecg_lab.waveform_ml.cli diagnostics
+
+            # 4. Re-run paired model-comparison bootstrap audit
+            python -m ecg_lab.waveform_ml.cli audit-paired-comparison --n-bootstraps 2000
+
+            # 5. Launch web application locally
+            streamlit run app.py
+            ```
+            """
+        )

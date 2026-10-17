@@ -346,10 +346,40 @@ def cmd_audit_paired_comparison(args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_diagnostics(args: argparse.Namespace) -> int:
+    """Print comprehensive system diagnostics and artifact integrity report."""
+    from ecg_lab.diagnostics import check_system_diagnostics
+    print("=" * 80)
+    print("CardioSense / ECG Insight Lab — System Diagnostics & Integrity Audit")
+    print("=" * 80)
+    diag = check_system_diagnostics(
+        data_dir=Path(args.data_dir),
+        artifact_dir=Path(args.output_dir),
+        sample_dir=Path(args.sample_dir),
+    )
+
+    for key, comp in diag.to_dict()["components"].items():
+        icon = "[OK]" if comp["is_available"] else "[WARN]"
+        print(f"\n{icon} {comp['name']}: {comp['status_label']}")
+        if comp.get("details"):
+            for k, v in comp["details"].items():
+                print(f"    - {k}: {v}")
+        if comp.get("guidance"):
+            print(f"    * Guidance: {comp['guidance']}")
+
+    print("\n" + "=" * 80)
+    if diag.all_critical_components_ready:
+        print("[STATUS] All critical demo components are OPERATIONAL.")
+        return 0
+    else:
+        print("[STATUS] System is in an INCOMPLETE or RESTRICTED state.")
+        return 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="ecg_lab.waveform_ml",
-        description="CardioSense Phase 3: PTB-XL Digital Waveform ML Pipeline",
+        description="CardioSense Phase 3/4: PTB-XL Digital Waveform ML Pipeline & Diagnostics",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
@@ -393,6 +423,8 @@ def main() -> int:
     sub_dl_miss = subparsers.add_parser("download-missing", help="Download all missing PTB-XL records")
     sub_dl_miss.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Dataset root dir")
     sub_dl_miss.add_argument("--concurrency", type=int, default=40, help="Async download concurrency")
+    sub_dl_miss.add_argument("--folds", default=None, help="Comma-separated folds to download (e.g. 1,2,3)")
+
     # Subcommand: audit-paired-comparison
     sub_pair = subparsers.add_parser("audit-paired-comparison", help="Audit paired model comparison on Fold 10")
     sub_pair.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Dataset root dir")
@@ -400,6 +432,12 @@ def main() -> int:
     sub_pair.add_argument("--output-dir", default=str(DEFAULT_ARTIFACT_DIR), help="Artifacts directory")
     sub_pair.add_argument("--n-bootstraps", type=int, default=2000, help="Number of bootstrap resamples")
     sub_pair.add_argument("--random-seed", type=int, default=DEFAULT_RANDOM_SEED, help="Random seed")
+
+    # Subcommand: diagnostics
+    sub_diag = subparsers.add_parser("diagnostics", help="Run system diagnostics and artifact integrity checks")
+    sub_diag.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Dataset root dir")
+    sub_diag.add_argument("--output-dir", default=str(DEFAULT_ARTIFACT_DIR), help="Artifacts directory")
+    sub_diag.add_argument("--sample-dir", default="sample_data", help="Sample data directory")
 
     args = parser.parse_args()
     if not args.command:
@@ -422,6 +460,8 @@ def main() -> int:
         return cmd_train(args)
     elif args.command == "audit-paired-comparison":
         return cmd_audit_paired_comparison(args)
+    elif args.command == "diagnostics":
+        return cmd_diagnostics(args)
     else:
         parser.print_help()
         return 1
