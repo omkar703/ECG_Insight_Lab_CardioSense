@@ -56,37 +56,25 @@ All figures embedded below are genuinely produced from actual project data and r
 
 ### Interactive Application Video Demonstrations
 
-The complete interactive research interface can be observed in real time across the two core platform modes:
+The complete interactive research interface can be observed in real time across the two core platform modes. The animated walkthroughs below play automatically in GitHub; click either animation or the direct links to watch the full 1080p high-definition recording in GitHub's native video player.
 
 #### 1. Practical Lab & Live Experiment Walkthrough (`lab.mp4`)
 *Demonstrates interactive 12-lead signal exploration, zero-phase filtering and Bode response, diagnostic superclass inference, confusion matrices, single-lead MIT-BIH Holter beat classification, and LLM clinical explanations.*
 
-https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4
-
-<p align="center">
-  <video src="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4" controls="controls" width="100%" poster="docs/assets/lab_preview.png">
-    <a href="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4">▶ Play Video Walkthrough (lab.mp4)</a>
-  </video>
-</p>
+[![Practical Lab & Live Experiment Walkthrough](docs/assets/lab_walkthrough.gif)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/lab.mp4)
 
 > [!TIP]
-> **Direct Video Playback:** Click the player above, or **[open `docs/assets/lab.mp4` directly in GitHub's native video player](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4)**.
+> **▶ [Click here to watch the full 1080p video with audio in GitHub's native video player (`docs/assets/lab.mp4`)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/lab.mp4)**.
 
 ---
 
 #### 2. Guided Educational Demo Walkthrough (`demo_guide.mp4`)
 *Demonstrates the 9-step pedagogical walkthrough covering cardiac electrophysiology, data leakage prevention, signal conditioning, decoupled machine learning architectures, and calibrated diagnostic decision cutoffs.*
 
-https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4
-
-<p align="center">
-  <video src="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4" controls="controls" width="100%" poster="docs/assets/demo_guide_preview.png">
-    <a href="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4">▶ Play Video Walkthrough (demo_guide.mp4)</a>
-  </video>
-</p>
+[![Guided Educational Demo Walkthrough](docs/assets/demo_guide_walkthrough.gif)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/demo_guide.mp4)
 
 > [!TIP]
-> **Direct Video Playback:** Click the player above, or **[open `docs/assets/demo_guide.mp4` directly in GitHub's native video player](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4)**.
+> **▶ [Click here to watch the full 1080p video with audio in GitHub's native video player (`docs/assets/demo_guide.mp4`)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/demo_guide.mp4)**.
 
 ---
 
