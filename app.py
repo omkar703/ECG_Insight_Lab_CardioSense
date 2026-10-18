@@ -2097,7 +2097,7 @@ elif st.session_state["nav_mode"] == "Live Experiment":
                         r = filt_df.loc[eid]
                         sc = ", ".join(r["diagnostic_superclasses"]) if r["diagnostic_superclasses"] else "Unmapped"
                         suffix = " [Pre-packaged Demo]" if use_cloud_demo_ptb else ""
-                        return f"Record #{int(eid):05d} [Fold {r['strat_fold']}] — Pt #{r['patient_id']} ({sc}){suffix}"
+                        return f"Record #{int(eid):05d} [Fold {int(r['strat_fold'])}] — Pt #{int(r['patient_id'])} ({sc}){suffix}"
                     selected_eid = st.selectbox("Select Patient Record", options=filt_df.index.tolist(), format_func=fmt_ptb_rec)
 
                 rec_row = filt_df.loc[selected_eid]
@@ -2109,131 +2109,131 @@ elif st.session_state["nav_mode"] == "Live Experiment":
                     rec_path = data_path / str(rec_row["filename_lr"])
                     raw_sig, rec_meta = read_wfdb_record(rec_path)
 
-                    # Metadata metrics
-                    m1, m2, m3, m4 = st.columns(4)
-                    m1.metric("Patient ID", f"Pt #{rec_row['patient_id']}")
-                    m2.metric("Partition", f"Fold {rec_row['strat_fold']}")
-                    m3.metric("Sampling Rate", f"{rec_meta['fs']} Hz")
-                    gt_label = ", ".join(rec_row["diagnostic_superclasses"]) if rec_row["diagnostic_superclasses"] else "None"
-                    m4.metric("Ground Truth", gt_label)
+                # Metadata metrics
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Patient ID", f"Pt #{int(rec_row['patient_id'])}")
+                m2.metric("Partition", f"Fold {int(rec_row['strat_fold'])}")
+                m3.metric("Sampling Rate", f"{rec_meta['fs']} Hz")
+                gt_label = ", ".join(rec_row["diagnostic_superclasses"]) if rec_row["diagnostic_superclasses"] else "None"
+                m4.metric("Ground Truth", gt_label)
 
-                    # 2. Configure Processing
-                    with st.expander("Filter Parameters & Bode Response", expanded=False):
-                        fc1, fc2, fc3 = st.columns(3)
-                        with fc1:
-                            bp_l = st.slider("Bandpass Lowcut (Hz)", 0.1, 2.0, 0.5, 0.1, key="ptb_l")
-                        with fc2:
-                            bp_h = st.slider("Bandpass Highcut (Hz)", 20.0, 48.0, 40.0, 1.0, key="ptb_h")
-                        with fc3:
-                            notch_s = st.selectbox("Mains Notch", ["50 Hz", "60 Hz", "Off"], index=0, key="ptb_n")
-                        notch_v = 50.0 if notch_s == "50 Hz" else (60.0 if notch_s == "60 Hz" else None)
+                # 2. Configure Processing
+                with st.expander("Filter Parameters & Bode Response", expanded=False):
+                    fc1, fc2, fc3 = st.columns(3)
+                    with fc1:
+                        bp_l = st.slider("Bandpass Lowcut (Hz)", 0.1, 2.0, 0.5, 0.1, key="ptb_l")
+                    with fc2:
+                        bp_h = st.slider("Bandpass Highcut (Hz)", 20.0, 48.0, 40.0, 1.0, key="ptb_h")
+                    with fc3:
+                        notch_s = st.selectbox("Mains Notch", ["50 Hz", "60 Hz", "Off"], index=0, key="ptb_n")
+                    notch_v = 50.0 if notch_s == "50 Hz" else (60.0 if notch_s == "60 Hz" else None)
 
-                        w_b, m_b, p_b = compute_filter_bode_data(lowcut=bp_l, highcut=bp_h, fs=rec_meta['fs'], notch_freq=notch_v)
-                        fig_bode = create_bode_plot(w_b, m_b, p_b, lowcut=bp_l, highcut=bp_h, notch_freq=notch_v)
-                        st.plotly_chart(fig_bode, width='stretch', theme=None)
+                    w_b, m_b, p_b = compute_filter_bode_data(lowcut=bp_l, highcut=bp_h, fs=rec_meta['fs'], notch_freq=notch_v)
+                    fig_bode = create_bode_plot(w_b, m_b, p_b, lowcut=bp_l, highcut=bp_h, notch_freq=notch_v)
+                    st.plotly_chart(fig_bode, width='stretch', theme=None)
 
-                    # Filtered signal
-                    filt_sig = np.zeros_like(raw_sig)
-                    for l_idx in range(12):
-                        filt_sig[:, l_idx] = apply_bandpass_notch_filter(raw_sig[:, l_idx], fs=rec_meta['fs'], lowcut=bp_l, highcut=bp_h, notch_freq=notch_v)
+                # Filtered signal
+                filt_sig = np.zeros_like(raw_sig)
+                for l_idx in range(12):
+                    filt_sig[:, l_idx] = apply_bandpass_notch_filter(raw_sig[:, l_idx], fs=rec_meta['fs'], lowcut=bp_l, highcut=bp_h, notch_freq=notch_v)
 
-                    # 3. Inspect Signals & Matrices
-                    viz_sel = st.radio("Signal View", ["12-Lead Multi-Channel Grid", "Continuous Voltage Matrix Heatmap", "Cross-Lead Correlation Matrix"], horizontal=True)
-                    t_ax = np.arange(len(filt_sig)) / float(rec_meta['fs'])
+                # 3. Inspect Signals & Matrices
+                viz_sel = st.radio("Signal View", ["12-Lead Multi-Channel Grid", "Continuous Voltage Matrix Heatmap", "Cross-Lead Correlation Matrix"], horizontal=True)
+                t_ax = np.arange(len(filt_sig)) / float(rec_meta['fs'])
 
-                    if viz_sel == "12-Lead Multi-Channel Grid":
-                        fig_leads = make_subplots(rows=4, cols=3, subplot_titles=WF_LEAD_NAMES, vertical_spacing=0.08, horizontal_spacing=0.05)
-                        for l_i, l_name in enumerate(WF_LEAD_NAMES):
-                            fig_leads.add_trace(go.Scatter(x=t_ax, y=filt_sig[:, l_i], mode="lines", name=l_name, line=dict(color="#000000", width=1.2)), row=(l_i//3)+1, col=(l_i%3)+1)
-                        fig_leads.update_layout(height=580, showlegend=False, margin=dict(l=30, r=20, t=30, b=25))
-                        fig_leads = apply_clean_scientific_theme(fig_leads)
-                        st.plotly_chart(fig_leads, width='stretch', theme=None)
-                    elif viz_sel == "Continuous Voltage Matrix Heatmap":
-                        st.plotly_chart(create_12lead_matrix_heatmap(filt_sig, fs=rec_meta['fs']), width='stretch', theme=None)
-                    else:
-                        st.plotly_chart(create_lead_correlation_heatmap(filt_sig), width='stretch', theme=None)
+                if viz_sel == "12-Lead Multi-Channel Grid":
+                    fig_leads = make_subplots(rows=4, cols=3, subplot_titles=WF_LEAD_NAMES, vertical_spacing=0.08, horizontal_spacing=0.05)
+                    for l_i, l_name in enumerate(WF_LEAD_NAMES):
+                        fig_leads.add_trace(go.Scatter(x=t_ax, y=filt_sig[:, l_i], mode="lines", name=l_name, line=dict(color="#000000", width=1.2)), row=(l_i//3)+1, col=(l_i%3)+1)
+                    fig_leads.update_layout(height=580, showlegend=False, margin=dict(l=30, r=20, t=30, b=25))
+                    fig_leads = apply_clean_scientific_theme(fig_leads)
+                    st.plotly_chart(fig_leads, width='stretch', theme=None)
+                elif viz_sel == "Continuous Voltage Matrix Heatmap":
+                    st.plotly_chart(create_12lead_matrix_heatmap(filt_sig, fs=rec_meta['fs']), width='stretch', theme=None)
+                else:
+                    st.plotly_chart(create_lead_correlation_heatmap(filt_sig), width='stretch', theme=None)
 
-                    # 4. Run Model
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    m_btn_c1, m_btn_c2, m_btn_c3 = st.columns([1, 1, 1])
-                    with m_btn_c2:
-                        run_clicked = st.button("Run Diagnostic Classification", type="primary", key="btn_run_ptb_ml", use_container_width=True)
+                # 4. Run Model
+                st.markdown("<br>", unsafe_allow_html=True)
+                m_btn_c1, m_btn_c2, m_btn_c3 = st.columns([1, 1, 1])
+                with m_btn_c2:
+                    run_clicked = st.button("Run Diagnostic Classification", type="primary", key="btn_run_ptb_ml", use_container_width=True)
 
-                    if run_clicked:
-                        model_path = Path(WF_ARTIFACT_DIR) / "waveform_lr_model.joblib"
-                        with st.spinner("Extracting features and running model inference..."):
-                            model, manifest = load_verified_model(model_path)
-                            feats = extract_record_features(filt_sig).reshape(1, -1)
-                            probs = model.predict_proba(feats)
-                            scs = manifest.get("target_superclasses", list(TARGET_SUPERCLASSES))
-                            cuts = {"NORM": 0.448, "MI": 0.334, "STTC": 0.309, "CD": 0.311, "HYP": 0.280}
+                if run_clicked:
+                    model_path = Path(WF_ARTIFACT_DIR) / "waveform_lr_model.joblib"
+                    with st.spinner("Extracting features and running model inference..."):
+                        model, manifest = load_verified_model(model_path)
+                        feats = extract_record_features(filt_sig).reshape(1, -1)
+                        probs = model.predict_proba(feats)
+                        scs = manifest.get("target_superclasses", list(TARGET_SUPERCLASSES))
+                        cuts = {"NORM": 0.448, "MI": 0.334, "STTC": 0.309, "CD": 0.311, "HYP": 0.280}
 
-                            pred_list = []
-                            for idx, sc in enumerate(scs):
-                                p_val = float(probs[idx][0, 1]) if isinstance(probs, list) else float(probs[0, idx])
-                                cutoff = cuts.get(sc, 0.5)
-                                is_pos = p_val >= cutoff
-                                pred_list.append({
-                                    "superclass": sc,
-                                    "probability": round(p_val, 4),
-                                    "cutoff": cutoff,
-                                    "status": "POS" if is_pos else "NEG",
-                                })
+                        pred_list = []
+                        for idx, sc in enumerate(scs):
+                            p_val = float(probs[idx][0, 1]) if isinstance(probs, list) else float(probs[0, idx])
+                            cutoff = cuts.get(sc, 0.5)
+                            is_pos = p_val >= cutoff
+                            pred_list.append({
+                                "superclass": sc,
+                                "probability": round(p_val, 4),
+                                "cutoff": cutoff,
+                                "status": "POS" if is_pos else "NEG",
+                            })
 
-                            st.session_state["ptb_ml_results"] = {
-                                "selected_eid": selected_eid,
-                                "strat_fold": int(rec_row["strat_fold"]),
-                                "ground_truth": rec_row["diagnostic_superclasses"] or [],
-                                "fs": rec_meta["fs"],
-                                "pred_list": pred_list,
-                                "scs": scs,
-                            }
-
-                    if "ptb_ml_results" in st.session_state and st.session_state["ptb_ml_results"].get("selected_eid") == selected_eid:
-                        ptb_saved = st.session_state["ptb_ml_results"]
-                        p_list = ptb_saved["pred_list"]
-                        st.markdown("#### Diagnostic Prediction Results")
-                        res_cols = st.columns(len(p_list))
-                        for idx, p_item in enumerate(p_list):
-                            with res_cols[idx]:
-                                tag = "POS" if p_item["status"] == "POS" else "NEG"
-                                st.metric(f"{p_item['superclass']} ({tag})", f"{p_item['probability']:.1%}", delta=f"Cutoff: {p_item['cutoff']:.1%}")
-
-                        with st.expander("Diagnostic Contingency Benchmark Matrices (Fold 10)", expanded=False):
-                            c_tabs = st.tabs(ptb_saved["scs"])
-                            for idx, sc in enumerate(ptb_saved["scs"]):
-                                with c_tabs[idx]:
-                                    st.plotly_chart(create_multilabel_contingency_figure(sc), width='stretch', theme=None)
-
-                        # Explain Results Action
-                        ptb_payload = {
-                            "workflow": "workflow_b_12lead",
-                            "source_category": f"PTB-XL Record (Fold {ptb_saved['strat_fold']})",
-                            "is_simulation": False,
-                            "sampling_rate_hz": ptb_saved["fs"],
-                            "units_and_calibration": "Calibrated 12-lead digital ECG (mV)",
-                            "summary_metrics": {p["superclass"]: f"{p['probability']:.1%}" for p in p_list},
-                            "class_predictions": p_list,
-                            "data_quality_flags": [
-                                "Standard 12 leads processed (I, II, III, aVR, aVL, aVF, V1-V6)",
-                                "Zero-phase forward-backward Butterworth filter applied",
-                            ],
-                            "evaluation_context": {
-                                "partition_fold": ptb_saved["strat_fold"],
-                                "ground_truth_labels": ptb_saved["ground_truth"],
-                            },
-                            "known_limitations": [
-                                "Multi-output logistic regression model; research prototype only",
-                                "Decision cutoffs calibrated on validation Fold 9",
-                                "Predicted labels are statistical pattern classes, NOT clinical diagnoses",
-                            ],
+                        st.session_state["ptb_ml_results"] = {
+                            "selected_eid": selected_eid,
+                            "strat_fold": int(rec_row["strat_fold"]),
+                            "ground_truth": rec_row["diagnostic_superclasses"] or [],
+                            "fs": rec_meta["fs"],
+                            "pred_list": pred_list,
+                            "scs": scs,
                         }
-                        render_explain_results_button(
-                            workflow="workflow_b_12lead",
-                            payload_data=ptb_payload,
-                            result_id=f"ptb_{selected_eid}",
-                            title="12-Lead Diagnostic Model Explanation",
-                        )
+
+                if "ptb_ml_results" in st.session_state and st.session_state["ptb_ml_results"].get("selected_eid") == selected_eid:
+                    ptb_saved = st.session_state["ptb_ml_results"]
+                    p_list = ptb_saved["pred_list"]
+                    st.markdown("#### Diagnostic Prediction Results")
+                    res_cols = st.columns(len(p_list))
+                    for idx, p_item in enumerate(p_list):
+                        with res_cols[idx]:
+                            tag = "POS" if p_item["status"] == "POS" else "NEG"
+                            st.metric(f"{p_item['superclass']} ({tag})", f"{p_item['probability']:.1%}", delta=f"Cutoff: {p_item['cutoff']:.1%}")
+
+                    with st.expander("Diagnostic Contingency Benchmark Matrices (Fold 10)", expanded=False):
+                        c_tabs = st.tabs(ptb_saved["scs"])
+                        for idx, sc in enumerate(ptb_saved["scs"]):
+                            with c_tabs[idx]:
+                                st.plotly_chart(create_multilabel_contingency_figure(sc), width='stretch', theme=None)
+
+                    # Explain Results Action
+                    ptb_payload = {
+                        "workflow": "workflow_b_12lead",
+                        "source_category": f"PTB-XL Record (Fold {ptb_saved['strat_fold']})",
+                        "is_simulation": False,
+                        "sampling_rate_hz": ptb_saved["fs"],
+                        "units_and_calibration": "Calibrated 12-lead digital ECG (mV)",
+                        "summary_metrics": {p["superclass"]: f"{p['probability']:.1%}" for p in p_list},
+                        "class_predictions": p_list,
+                        "data_quality_flags": [
+                            "Standard 12 leads processed (I, II, III, aVR, aVL, aVF, V1-V6)",
+                            "Zero-phase forward-backward Butterworth filter applied",
+                        ],
+                        "evaluation_context": {
+                            "partition_fold": ptb_saved["strat_fold"],
+                            "ground_truth_labels": ptb_saved["ground_truth"],
+                        },
+                        "known_limitations": [
+                            "Multi-output logistic regression model; research prototype only",
+                            "Decision cutoffs calibrated on validation Fold 9",
+                            "Predicted labels are statistical pattern classes, NOT clinical diagnoses",
+                        ],
+                    }
+                    render_explain_results_button(
+                        workflow="workflow_b_12lead",
+                        payload_data=ptb_payload,
+                        result_id=f"ptb_{selected_eid}",
+                        title="12-Lead Diagnostic Model Explanation",
+                    )
 
             except Exception as e:
                 st.error(f"Error accessing PTB-XL records: {e}")
