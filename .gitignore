@@ -19,7 +19,7 @@ secrets.toml
 
 # Datasets & Large Archives (Do not commit large datasets to Git)
 data/
-*.mp4
+
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
