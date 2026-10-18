@@ -318,8 +318,11 @@ class TestStreamlitAppTestIntegration:
         at.radio(key="top_nav_mode_radio").set_value("Live Experiment").run()
 
         tab_labels = [t.label for t in at.tabs]
-        assert "Hardware Prototype AD8232" in tab_labels
-        assert "Single-Lead Lab" in tab_labels
+        assert len(tab_labels) == 3
+        assert "Hardware Prototype — Offline AD8232 Simulation" in tab_labels
+        assert "Single-Lead Beat Analysis (MIT-BIH)" in tab_labels
+        assert "12-Lead ECG Classification (PTB-XL)" in tab_labels
+        assert "Optical Paper Digitizer" not in tab_labels
 
     def test_ad8232_simulation_button_runs_and_displays_predictions(self):
         from streamlit.testing.v1 import AppTest
