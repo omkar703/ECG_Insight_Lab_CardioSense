@@ -1125,9 +1125,6 @@ if st.session_state["nav_mode"] == "Guided Demo":
             <div style='font-size: 1.05rem; font-weight: 400; color: #444444; line-height: 1.6; margin-bottom: 1.25rem; max-width: 820px; margin-left: auto; margin-right: auto;'>
                 An educational and research prototype evaluating public ECG cohorts across three decoupled workflows: 12-lead multi-label pathology classification (PTB-XL), single-lead arrhythmia beat analysis (MIT-BIH), and offline AD8232 analog front-end telemetry simulation.
             </div>
-            <div style='display: inline-block; background-color: #F0EFE9; border: 1px solid #DCDDD5; border-radius: 6px; padding: 6px 16px; font-size: 0.84rem; color: #6F716B; margin-bottom: 1rem;'>
-                <strong>Educational & Research Prototype:</strong> Not evaluated or certified by FDA/CE for medical diagnosis or clinical decision-making. Physical hardware acquisition remains untested.
-            </div>
         </div>
         """
         st.markdown(hero_html, unsafe_allow_html=True)
@@ -2243,12 +2240,6 @@ elif st.session_state["nav_mode"] == "Live Experiment":
     # --------------------------------------------------------------------------
     with tab_single:
         st.markdown("### Single-Lead Lab")
-        st.markdown(
-            "<span style='font-size: 0.85rem; color: #666;'>MIT-BIH Arrhythmia Database · 360 Hz Single-Lead MLII/V1 · "
-            "<strong>RECORDED DATA REPLAY — NOT LIVE HARDWARE</strong></span>",
-            unsafe_allow_html=True,
-        )
-        st.caption(f"Research Notice: {DISCLAIMER_SINGLE_LEAD_RESEARCH}")
 
         mit_recs = []
         try:
@@ -2428,14 +2419,6 @@ elif st.session_state["nav_mode"] == "Live Experiment":
     # --------------------------------------------------------------------------
     with tab_ad8232:
         st.markdown("### Hardware Prototype — Offline AD8232 Simulation")
-        st.warning(
-            "**Notice:** Physical hardware has not been tested. "
-            "The ECG, ADC readings, and reconstructed voltage on this screen are simulated."
-        )
-        st.info(
-            "**Biomedical Safety:** Standard USB/microcontroller circuits lack galvanic isolation (IEC 60601-1). "
-            "Direct electrode connection to human subjects is strictly prohibited without certified medical isolation."
-        )
 
         sim_conn = st.radio(
             "Acquisition Interface",
