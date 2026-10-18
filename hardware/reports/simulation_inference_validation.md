@@ -80,7 +80,7 @@ The following data-flow diagram illustrates the complete route from raw signal s
 | 6. CONSOLIDATED INFERENCE SERVICE (run_single_lead_inference)                                     |
 |    - Input Prerequisite Check: 1D array, finite values, units=="mV", fs==360 Hz                   |
 |    - Autonomous Pan-Tompkins QRS Peak Detector (NO access to ground-truth annotations)            |
-|    - Feature Extraction: 50 features (5 RR dynamics, 10 window, 12 subsegment, 20 morph points)   |
+|    - Feature Extraction: 47 features (5 RR dynamics, 10 window, 12 subsegment, 20 morph points)   |
 |    - Model Inference: Frozen Balanced Random Forest (100 trees, 4 classes: N, S, V, Q)            |
 +---------------------------------------------------------------------------------------------------+
                                                   │

@@ -69,6 +69,21 @@ from ecg_lab.single_lead_ml.models import (
 from ecg_lab.single_lead_ml.playback import get_playback_slice
 
 
+def is_mitdb_available() -> bool:
+    try:
+        resolve_mitdb_dir()
+        return True
+    except FileNotFoundError:
+        return False
+
+
+mitdb_required = pytest.mark.skipif(
+    not is_mitdb_available(),
+    reason="MIT-BIH Arrhythmia Database files not present on disk (optional dataset integration test)",
+)
+
+
+@mitdb_required
 class TestDatasetProvenanceAndIntegrity:
     """Stage 1: Ingestion, provenance, channel policy, and split verification."""
 
@@ -186,13 +201,32 @@ class TestFeatureExtractionAndDetector:
         assert POST_R_SAMPLES == 110
         assert BEAT_WINDOW_TOTAL_SAMPLES == 200
 
+    @mitdb_required
     def test_feature_extraction_dimensions_and_finiteness(self):
         rec, anns = load_record_with_annotations("100")
         feats, labels, v_anns = extract_annotated_record_features(rec, anns)
         assert feats.ndim == 2
-        assert feats.shape[1] == len(FEATURE_NAMES)
+        assert len(FEATURE_NAMES) == 47, "Workflow C feature schema must contain exactly 47 features (5 + 10 + 12 + 20)"
+        assert feats.shape[1] == 47
         assert len(labels) == len(v_anns) == feats.shape[0]
         assert np.all(np.isfinite(feats))
+
+    def test_feature_schema_breakdown_reconciliation(self):
+        """Verify the exact count breakdown of all 47 deterministic features."""
+        rr_features = [f for f in FEATURE_NAMES if "rr" in f]
+        global_morph = ["amp_mean", "amp_std", "amp_min", "amp_max", "amp_peak_to_peak", "amp_skewness", "amp_kurtosis", "amp_rms", "amp_energy", "zero_crossings"]
+        qrs_sub = [f for f in FEATURE_NAMES if f.startswith("qrs_")]
+        pre_sub = [f for f in FEATURE_NAMES if f.startswith("pre_") and not f.endswith("_rr_sec") and not f.startswith("pre_rr")]
+        post_sub = [f for f in FEATURE_NAMES if f.startswith("post_") and not f.endswith("_rr_sec") and not f.startswith("post_rr")]
+        morph_points = [f for f in FEATURE_NAMES if f.startswith("morph_sample_")]
+
+        assert len(rr_features) == 5, f"Expected 5 RR features, got {len(rr_features)}"
+        assert len(global_morph) == 10, f"Expected 10 global features, got {len(global_morph)}"
+        assert len(qrs_sub) == 5, f"Expected 5 QRS core features, got {len(qrs_sub)}"
+        assert len(pre_sub) == 3, f"Expected 3 Pre-QRS features, got {len(pre_sub)}"
+        assert len(post_sub) == 4, f"Expected 4 Post-QRS features, got {len(post_sub)}"
+        assert len(morph_points) == 20, f"Expected 20 morphology points, got {len(morph_points)}"
+        assert (len(rr_features) + len(global_morph) + len(qrs_sub) + len(pre_sub) + len(post_sub) + len(morph_points)) == 47
 
     def test_detector_operates_without_annotations(self):
         # Generate synthetic 10-second signal with 10 simulated QRS spikes

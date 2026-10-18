@@ -27,7 +27,7 @@ except ImportError:
     APIStatusError = Exception
     APIError = Exception
 
-DEFAULT_GROQ_MODEL: str = "qwen/qwen3.8-27b"
+DEFAULT_GROQ_MODEL: str = "llama-3.3-70b-versatile"
 DEFAULT_TIMEOUT_SECONDS: float = 25.0
 DEFAULT_MAX_TOKENS: int = 1000
 

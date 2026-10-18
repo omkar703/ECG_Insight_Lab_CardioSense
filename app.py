@@ -980,7 +980,7 @@ if "nav_mode" not in st.session_state:
 if "demo_step" not in st.session_state:
     st.session_state["demo_step"] = 0
 if "lab_active_tab" not in st.session_state:
-    st.session_state["lab_active_tab"] = "12-Lead Diagnostic Classification (PTB-XL)"
+    st.session_state["lab_active_tab"] = "12-Lead ECG Classification (PTB-XL)"
 
 # Sync query params with demo_step if present
 if "step" in st.query_params:
@@ -1023,7 +1023,7 @@ with header_col_left:
     )
     st.markdown(
         f"<div class='top-header-title' style='display: flex; align-items: center;'>"
-        f"{icon_tag}<span>CARDIOSENSE · ECG RESEARCH</span>"
+        f"{icon_tag}<span>CARDIOSENSE · ECG INSIGHT LAB</span>"
         f"</div>",
         unsafe_allow_html=True,
     )
@@ -1117,13 +1117,16 @@ if st.session_state["nav_mode"] == "Guided Demo":
         <div style='text-align: center; max-width: 920px; margin: 0 auto; padding: 1rem 1rem 1.25rem 1rem; background-color: #FAFAFA;'>
             {heart_img_html}
             <div style='font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #444444; margin-bottom: 0.5rem;'>
-                CARDIOVASCULAR SIGNAL INTELLIGENCE & RESEARCH PLATFORM
+                ECG INSIGHT LAB · REPRODUCIBLE RESEARCH PLATFORM
             </div>
             <div style='font-size: 1.85rem; font-weight: 800; color: #111111; line-height: 1.25; margin-bottom: 0.75rem; letter-spacing: -0.02em;'>
-                12-Lead & Single-Lead ECG Analysis, Archival Digitization & Hardware Emulation
+                Reproducible Machine Learning and Signal Analysis for ECG Data
             </div>
-            <div style='font-size: 1.05rem; font-weight: 400; color: #444444; line-height: 1.6; margin-bottom: 1.75rem; max-width: 820px; margin-left: auto; margin-right: auto;'>
-                Detect cardiac pathology from 12-lead calibrated voltage signals, isolate ambulatory arrhythmias with Pan-Tompkins QRS tracking, extract continuous waveforms from paper records, and simulate real-world analog sensor telemetry.
+            <div style='font-size: 1.05rem; font-weight: 400; color: #444444; line-height: 1.6; margin-bottom: 1.25rem; max-width: 820px; margin-left: auto; margin-right: auto;'>
+                An educational and research prototype evaluating public ECG cohorts across three decoupled workflows: 12-lead multi-label pathology classification (PTB-XL), single-lead arrhythmia beat analysis (MIT-BIH), and offline AD8232 analog front-end telemetry simulation.
+            </div>
+            <div style='display: inline-block; background-color: #F0EFE9; border: 1px solid #DCDDD5; border-radius: 6px; padding: 6px 16px; font-size: 0.84rem; color: #6F716B; margin-bottom: 1rem;'>
+                ⚠️ <strong>Educational & Research Prototype:</strong> Not evaluated or certified by FDA/CE for medical diagnosis or clinical decision-making. Physical hardware acquisition remains untested.
             </div>
         </div>
         """
@@ -1163,17 +1166,15 @@ if st.session_state["nav_mode"] == "Guided Demo":
 
                     ---
 
-                    ### Optical Paper Digitizer
-                    Historical outpatient charts and legacy records often exist solely as physical paper printouts or scanned photographs on standard 25 mm/s grid paper. The digitization pipeline uses classical computer vision algorithms—incorporating adaptive local thresholding, Gaussian smoothing, and morphological segmentation—to extract continuous 1D voltage traces across all 12 standard leads.
-
-                    To guarantee patient safety and algorithmic integrity, the digitization workflow operates in strict programmatic isolation from diagnostic machine learning models. Scanner grid noise, perspective distortions, and paper wrinkles are prevented from contaminating downstream classifier inputs. Extracted traces are calibrated against standard paper grid references and can be inspected via voltage heatmaps or exported as continuous CSV files with full metadata audit trails.
-
-                    ---
-
                     ### Hardware Prototype AD8232 Simulation
                     To bridge algorithmic software with physical telemetry, the hardware module provides an offline simulation of an AD8232 analog front-end biopotential sensor coupled with a microcontroller analog-to-digital converter stream. The system models 10-bit integer ADC counts transmitted over a line-delimited UART serial protocol.
 
-                    The simulation models real-world hardware operating conditions including physical electrode detachment (leads-off detection), baseline drift, somatic muscle tremors, and ADC rail clipping. A strict safety policy governs all telemetry: because uncalibrated hobbyist hardware lacks clinical isolation certificates, raw serial streams are verified for transport integrity but blocked from making automated diagnostic claims.
+                    The simulation models real-world hardware operating conditions including physical electrode detachment (leads-off detection), baseline drift, somatic muscle tremors, and ADC rail clipping. A strict safety policy governs all telemetry: because physical hardware has not been tested and hobbyist hardware lacks clinical isolation certificates, raw serial streams are verified for transport integrity but blocked from making automated diagnostic claims.
+
+                    ---
+
+                    ### Archived / Experimental Research Modules
+                    - **Optical Paper Digitizer (Deprecated / Pre-Clinical Research):** Relocated from the primary application workflow to an isolated archival section. While the classical morphological digitizer achieves $r=0.6932$ on synthetic mathematical fixtures, real-image validation on clinical paper ECG printouts is currently insufficient to establish reliable performance. The module is strictly air-gapped from diagnostic ML pipelines to prevent uncalibrated optical noise from contaminating digital classifiers.
                     """
                 )
 
@@ -1394,10 +1395,10 @@ if st.session_state["nav_mode"] == "Guided Demo":
                 st.markdown(
                     """
                     <div class='clean-card' style='height: 100%;'>
-                    <span class='concept-badge'>LAB 3 · ARCHIVAL ISOLATION</span><br>
-                    <strong style='font-size: 0.95rem;'>Optical Paper Digitizer</strong>
+                    <span class='concept-badge'>LAB 3 · SENSOR SIMULATION</span><br>
+                    <strong style='font-size: 0.95rem;'>Offline AD8232 Prototype</strong>
                     <p style='font-size: 0.83rem; color: #555; margin-top: 0.4rem; line-height: 1.45;'>
-                    Digitizes paper records via adaptive thresholding. Kept strictly isolated from diagnostic ML models to prevent image artifacts.
+                    Simulates 10-bit integer ADC counts, UART framing, and inverse calibration for biopotential telemetry without physical human connection.
                     </p>
                     </div>
                     """,
@@ -1832,11 +1833,11 @@ if st.session_state["nav_mode"] == "Guided Demo":
                     """
                     <div class='gov-card'>
                         <span class='gov-badge'>TIER 2 · ARCHITECTURE</span>
-                        <div class='gov-title'>Decoupled Optical Workflow</div>
+                        <div class='gov-title'>Decoupled Workflows & Isolation</div>
                         <ul class='gov-list'>
-                            <li class='gov-item'><strong>Programmatic Air-Gap:</strong> Optical paper digitizer operates in strict isolation from downstream diagnostic ML inference engines.</li>
-                            <li class='gov-item'><strong>Artifact Prevention:</strong> Eliminates image perspective distortion, paper fold skew, and scanner grid noise from contaminating voltage classifiers.</li>
-                            <li class='gov-item'><strong>Inference Standard:</strong> Machine learning models process only calibrated digital time-series arrays conditioned with zero-phase filters.</li>
+                            <li class='gov-item'><strong>Patient-Separated Splits:</strong> PTB-XL (100 Hz, 12-lead) and MIT-BIH (360 Hz, single-lead) maintain strictly zero-leakage patient partitions.</li>
+                            <li class='gov-item'><strong>Gated Inference Boundary:</strong> Uncalibrated ADC counts and unverified optical traces are strictly blocked from entering ML classifiers.</li>
+                            <li class='gov-item'><strong>Archived Digitizer Status:</strong> Real-image validation is insufficient for production use; digitizer is archived and air-gapped.</li>
                         </ul>
                     </div>
                     """,
@@ -2034,11 +2035,10 @@ elif st.session_state["nav_mode"] == "Live Experiment":
         unsafe_allow_html=True,
     )
 
-    tab_12lead, tab_single, tab_ad8232, tab_digitizer = st.tabs([
-        "12-Lead Diagnostic Classification (PTB-XL)",
-        "Single-Lead Lab",
-        "Hardware Prototype AD8232",
-        "Optical Paper Digitizer",
+    tab_12lead, tab_single, tab_ad8232 = st.tabs([
+        "12-Lead ECG Classification (PTB-XL)",
+        "Single-Lead Beat Analysis (MIT-BIH)",
+        "Hardware Prototype — Offline AD8232 Simulation",
     ])
 
     # --------------------------------------------------------------------------
@@ -2427,7 +2427,15 @@ elif st.session_state["nav_mode"] == "Live Experiment":
     # Tab 3: Hardware Prototype AD8232
     # --------------------------------------------------------------------------
     with tab_ad8232:
-        st.markdown("### Hardware Prototype AD8232")
+        st.markdown("### Hardware Prototype — Offline AD8232 Simulation")
+        st.warning(
+            "⚠️ **Notice:** Physical hardware has not been tested. "
+            "The ECG, ADC readings, and reconstructed voltage on this screen are simulated."
+        )
+        st.info(
+            "🛡️ **Biomedical Safety:** Standard USB/microcontroller circuits lack galvanic isolation (IEC 60601-1). "
+            "Direct electrode connection to human subjects is strictly prohibited without certified medical isolation."
+        )
 
         sim_conn = st.radio(
             "Acquisition Interface",
@@ -2954,10 +2962,17 @@ elif st.session_state["nav_mode"] == "Live Experiment":
                 )
 
     # --------------------------------------------------------------------------
-    # Tab 4: Optical Paper Digitizer
+    # Archived / Experimental Research Module: Optical Paper Digitizer
     # --------------------------------------------------------------------------
-    with tab_digitizer:
-        st.markdown("### Optical Paper Digitizer")
+    st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+    with st.expander("Archived Research Module: Optical Paper Digitizer (Experimental / Deprecated)", expanded=False):
+        st.markdown("### Optical Paper Digitizer (Archived / Experimental)")
+        st.warning(
+            "⚠️ **Archived Research Notice:** This module was removed from primary navigation because its current benchmark "
+            "is synthetic-only ($r=0.6932$ on synthetic mathematical waveforms) and does not establish reliable signal recovery "
+            "on real-world hospital paper ECG scans. It is preserved here strictly for methodological reference and "
+            "remains programmatically air-gapped from downstream machine learning models."
+        )
         st.markdown("Extract continuous 1D waveforms from paper ECG scans. *Decoupled from diagnostic ML models.*")
 
         src_mode = st.radio("Source Image", ["Deterministic Benchmark Sample", "Upload Scanned ECG Image"], horizontal=True)

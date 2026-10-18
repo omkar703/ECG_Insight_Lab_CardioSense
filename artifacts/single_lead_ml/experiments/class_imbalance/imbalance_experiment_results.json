@@ -1,0 +1,733 @@
+{
+  "experiment_title": "Controlled Single-Lead Class-Imbalance Research Experiment",
+  "timestamp_utc": "2026-10-18T15:14:43Z",
+  "hypothesis": "Dynamic per-bootstrap weighting ('balanced_subsample') or minority cost-weighting can enhance minority beat recall (S and Q classes) without severe degradation to dominant class N precision on unseen subjects.",
+  "protocol": {
+    "train_records": [
+      "101",
+      "108",
+      "109",
+      "112",
+      "114",
+      "115",
+      "116",
+      "119",
+      "122",
+      "124",
+      "201",
+      "202",
+      "203",
+      "208",
+      "209",
+      "215"
+    ],
+    "val_records": [
+      "106",
+      "118",
+      "205",
+      "207",
+      "220",
+      "223",
+      "230"
+    ],
+    "test_records": [
+      "100",
+      "103",
+      "105",
+      "111",
+      "113",
+      "117",
+      "121",
+      "123",
+      "200",
+      "210",
+      "212",
+      "213",
+      "214",
+      "219",
+      "221",
+      "222",
+      "228",
+      "231",
+      "232",
+      "233",
+      "234"
+    ],
+    "n_train_samples": 37419,
+    "n_val_samples": 15725,
+    "n_test_samples": 47561,
+    "feature_count": 47,
+    "feature_names": [
+      "pre_rr_sec",
+      "post_rr_sec",
+      "local_rr_sec",
+      "rr_ratio_pre",
+      "rr_ratio_post",
+      "amp_mean",
+      "amp_std",
+      "amp_min",
+      "amp_max",
+      "amp_peak_to_peak",
+      "amp_skewness",
+      "amp_kurtosis",
+      "amp_rms",
+      "amp_energy",
+      "zero_crossings",
+      "qrs_mean",
+      "qrs_rms",
+      "qrs_peak_to_peak",
+      "qrs_energy",
+      "qrs_energy_ratio",
+      "pre_mean",
+      "pre_rms",
+      "pre_energy",
+      "post_mean",
+      "post_rms",
+      "post_energy",
+      "post_peak_to_peak",
+      "morph_sample_0",
+      "morph_sample_1",
+      "morph_sample_2",
+      "morph_sample_3",
+      "morph_sample_4",
+      "morph_sample_5",
+      "morph_sample_6",
+      "morph_sample_7",
+      "morph_sample_8",
+      "morph_sample_9",
+      "morph_sample_10",
+      "morph_sample_11",
+      "morph_sample_12",
+      "morph_sample_13",
+      "morph_sample_14",
+      "morph_sample_15",
+      "morph_sample_16",
+      "morph_sample_17",
+      "morph_sample_18",
+      "morph_sample_19"
+    ],
+    "classes": [
+      "N",
+      "S",
+      "V",
+      "Q"
+    ]
+  },
+  "selected_candidate": "Baseline (Balanced RF)",
+  "validation_evaluation": {
+    "Baseline (Balanced RF)": {
+      "fit_time_seconds": 1.52,
+      "macro_f1": 0.4468549802956925,
+      "weighted_f1": 0.9326958487596569,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 14036,
+          "true_positives": 13834,
+          "false_positives": 577,
+          "false_negatives": 202,
+          "true_negatives": 1112,
+          "precision": 0.9599611407952259,
+          "recall": 0.9856084354516956,
+          "f1_score": 0.9726157415544697
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 373,
+          "true_positives": 8,
+          "false_positives": 17,
+          "false_negatives": 365,
+          "true_negatives": 15335,
+          "precision": 0.32,
+          "recall": 0.021447721179624665,
+          "f1_score": 0.04020100502512563
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 1291,
+          "true_positives": 976,
+          "false_positives": 253,
+          "false_negatives": 315,
+          "true_negatives": 14181,
+          "precision": 0.7941415785191213,
+          "recall": 0.756003098373354,
+          "f1_score": 0.7746031746031746
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 25,
+          "true_positives": 0,
+          "false_positives": 60,
+          "false_negatives": 25,
+          "true_negatives": 15640,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          13834,
+          2,
+          155,
+          45
+        ],
+        [
+          266,
+          8,
+          97,
+          2
+        ],
+        [
+          287,
+          15,
+          976,
+          13
+        ],
+        [
+          24,
+          0,
+          1,
+          0
+        ]
+      ]
+    },
+    "Candidate 1 (Balanced Subsample RF)": {
+      "fit_time_seconds": 2.54,
+      "macro_f1": 0.4354587877279048,
+      "weighted_f1": 0.9301168300166237,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 14036,
+          "true_positives": 13994,
+          "false_positives": 778,
+          "false_negatives": 42,
+          "true_negatives": 911,
+          "precision": 0.9473327917682102,
+          "recall": 0.9970076944998575,
+          "f1_score": 0.9715356845320744
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 373,
+          "true_positives": 1,
+          "false_positives": 5,
+          "false_negatives": 372,
+          "true_negatives": 15347,
+          "precision": 0.16666666666666666,
+          "recall": 0.002680965147453083,
+          "f1_score": 0.005277044854881266
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 1291,
+          "true_positives": 853,
+          "false_positives": 86,
+          "false_negatives": 438,
+          "true_negatives": 14348,
+          "precision": 0.9084132055378061,
+          "recall": 0.6607281177381874,
+          "f1_score": 0.7650224215246637
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 25,
+          "true_positives": 0,
+          "false_positives": 8,
+          "false_negatives": 25,
+          "true_negatives": 15692,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          13994,
+          1,
+          41,
+          0
+        ],
+        [
+          327,
+          1,
+          44,
+          1
+        ],
+        [
+          427,
+          4,
+          853,
+          7
+        ],
+        [
+          24,
+          0,
+          1,
+          0
+        ]
+      ]
+    },
+    "Candidate 2 (Balanced Logistic Regression)": {
+      "fit_time_seconds": 16.38,
+      "macro_f1": 0.4467905096759731,
+      "weighted_f1": 0.8148038158531515,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 14036,
+          "true_positives": 10432,
+          "false_positives": 164,
+          "false_negatives": 3604,
+          "true_negatives": 1525,
+          "precision": 0.9845224613061533,
+          "recall": 0.7432316899401539,
+          "f1_score": 0.8470282559272491
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 373,
+          "true_positives": 136,
+          "false_positives": 377,
+          "false_negatives": 237,
+          "true_negatives": 14975,
+          "precision": 0.2651072124756335,
+          "recall": 0.3646112600536193,
+          "f1_score": 0.30699774266365687
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 1291,
+          "true_positives": 965,
+          "false_positives": 823,
+          "false_negatives": 326,
+          "true_negatives": 13611,
+          "precision": 0.5397091722595079,
+          "recall": 0.7474825716498839,
+          "f1_score": 0.6268268918480026
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 25,
+          "true_positives": 9,
+          "false_positives": 2819,
+          "false_negatives": 16,
+          "true_negatives": 12881,
+          "precision": 0.0031824611032531826,
+          "recall": 0.36,
+          "f1_score": 0.006309148264984227
+        }
+      },
+      "confusion_matrix": [
+        [
+          10432,
+          301,
+          736,
+          2567
+        ],
+        [
+          58,
+          136,
+          82,
+          97
+        ],
+        [
+          97,
+          74,
+          965,
+          155
+        ],
+        [
+          9,
+          2,
+          5,
+          9
+        ]
+      ]
+    },
+    "Candidate 3 (Minority-Boosted Cost-Sensitive RF)": {
+      "fit_time_seconds": 1.0,
+      "macro_f1": 0.41514436500405416,
+      "weighted_f1": 0.9120528108094726,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 14036,
+          "true_positives": 13416,
+          "false_positives": 499,
+          "false_negatives": 620,
+          "true_negatives": 1190,
+          "precision": 0.9641394178943586,
+          "recall": 0.9558278711883728,
+          "f1_score": 0.9599656541805303
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 373,
+          "true_positives": 8,
+          "false_positives": 21,
+          "false_negatives": 365,
+          "true_negatives": 15331,
+          "precision": 0.27586206896551724,
+          "recall": 0.021447721179624665,
+          "f1_score": 0.03980099502487562
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 1291,
+          "true_positives": 978,
+          "false_positives": 691,
+          "false_negatives": 313,
+          "true_negatives": 13743,
+          "precision": 0.5859796285200719,
+          "recall": 0.7575522850503486,
+          "f1_score": 0.6608108108108108
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 25,
+          "true_positives": 0,
+          "false_positives": 112,
+          "false_negatives": 25,
+          "true_negatives": 15588,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          13416,
+          1,
+          538,
+          81
+        ],
+        [
+          211,
+          8,
+          152,
+          2
+        ],
+        [
+          264,
+          20,
+          978,
+          29
+        ],
+        [
+          24,
+          0,
+          1,
+          0
+        ]
+      ]
+    }
+  },
+  "test_evaluation": {
+    "Baseline (Balanced RF)": {
+      "macro_f1": 0.5395782332503253,
+      "weighted_f1": 0.9035636741330682,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 42184,
+          "true_positives": 39006,
+          "false_positives": 1645,
+          "false_negatives": 3178,
+          "true_negatives": 3732,
+          "precision": 0.9595335908095742,
+          "recall": 0.9246633794803717,
+          "f1_score": 0.9417758194000121
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 1782,
+          "true_positives": 364,
+          "false_positives": 538,
+          "false_negatives": 1418,
+          "true_negatives": 45241,
+          "precision": 0.4035476718403548,
+          "recall": 0.20426487093153758,
+          "f1_score": 0.27123695976154993
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 3201,
+          "true_positives": 2952,
+          "false_positives": 779,
+          "false_negatives": 249,
+          "true_negatives": 43581,
+          "precision": 0.7912087912087912,
+          "recall": 0.922211808809747,
+          "f1_score": 0.8517022504327756
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 394,
+          "true_positives": 125,
+          "false_positives": 2152,
+          "false_negatives": 269,
+          "true_negatives": 45015,
+          "precision": 0.05489679402722881,
+          "recall": 0.31725888324873097,
+          "f1_score": 0.09359790340696368
+        }
+      },
+      "confusion_matrix": [
+        [
+          39006,
+          492,
+          535,
+          2151
+        ],
+        [
+          1380,
+          364,
+          38,
+          0
+        ],
+        [
+          203,
+          45,
+          2952,
+          1
+        ],
+        [
+          62,
+          1,
+          206,
+          125
+        ]
+      ]
+    },
+    "Candidate 1 (Balanced Subsample RF)": {
+      "macro_f1": 0.5066223482053086,
+      "weighted_f1": 0.9159925573785399,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 42184,
+          "true_positives": 41310,
+          "false_positives": 2497,
+          "false_negatives": 874,
+          "true_negatives": 2880,
+          "precision": 0.942999977172598,
+          "recall": 0.9792812440735824,
+          "f1_score": 0.9607982230698562
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 1782,
+          "true_positives": 134,
+          "false_positives": 255,
+          "false_negatives": 1648,
+          "true_negatives": 45524,
+          "precision": 0.3444730077120823,
+          "recall": 0.07519640852974187,
+          "f1_score": 0.1234454168585905
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 3201,
+          "true_positives": 2592,
+          "false_positives": 161,
+          "false_negatives": 609,
+          "true_negatives": 44199,
+          "precision": 0.9415183436251362,
+          "recall": 0.8097469540768509,
+          "f1_score": 0.8706751763520323
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 394,
+          "true_positives": 36,
+          "false_positives": 576,
+          "false_negatives": 358,
+          "true_negatives": 46591,
+          "precision": 0.058823529411764705,
+          "recall": 0.09137055837563451,
+          "f1_score": 0.07157057654075547
+        }
+      },
+      "confusion_matrix": [
+        [
+          41310,
+          232,
+          67,
+          575
+        ],
+        [
+          1618,
+          134,
+          30,
+          0
+        ],
+        [
+          585,
+          23,
+          2592,
+          1
+        ],
+        [
+          294,
+          0,
+          64,
+          36
+        ]
+      ]
+    },
+    "Candidate 2 (Balanced Logistic Regression)": {
+      "macro_f1": 0.5035931320897516,
+      "weighted_f1": 0.7969119266891556,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 42184,
+          "true_positives": 30150,
+          "false_positives": 1080,
+          "false_negatives": 12034,
+          "true_negatives": 4297,
+          "precision": 0.9654178674351584,
+          "recall": 0.7147259624502181,
+          "f1_score": 0.8213692211294848
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 1782,
+          "true_positives": 762,
+          "false_positives": 3655,
+          "false_negatives": 1020,
+          "true_negatives": 42124,
+          "precision": 0.1725152818655196,
+          "recall": 0.4276094276094276,
+          "f1_score": 0.24584610421035652
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 3201,
+          "true_positives": 2790,
+          "false_positives": 423,
+          "false_negatives": 411,
+          "true_negatives": 43937,
+          "precision": 0.8683473389355743,
+          "recall": 0.8716026241799437,
+          "f1_score": 0.8699719363891487
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 394,
+          "true_positives": 351,
+          "false_positives": 8350,
+          "false_negatives": 43,
+          "true_negatives": 38817,
+          "precision": 0.04034019078266866,
+          "recall": 0.8908629441624365,
+          "f1_score": 0.07718526663001649
+        }
+      },
+      "confusion_matrix": [
+        [
+          30150,
+          3464,
+          387,
+          8183
+        ],
+        [
+          981,
+          762,
+          9,
+          30
+        ],
+        [
+          85,
+          189,
+          2790,
+          137
+        ],
+        [
+          14,
+          2,
+          27,
+          351
+        ]
+      ]
+    },
+    "Candidate 3 (Minority-Boosted Cost-Sensitive RF)": {
+      "macro_f1": 0.5592294797281966,
+      "weighted_f1": 0.903661357241963,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 42184,
+          "true_positives": 38496,
+          "false_positives": 1499,
+          "false_negatives": 3688,
+          "true_negatives": 3878,
+          "precision": 0.96252031503938,
+          "recall": 0.9125734875782288,
+          "f1_score": 0.9368816851020334
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 1782,
+          "true_positives": 483,
+          "false_positives": 712,
+          "false_negatives": 1299,
+          "true_negatives": 45067,
+          "precision": 0.40418410041841,
+          "recall": 0.27104377104377103,
+          "f1_score": 0.3244877393349009
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 3201,
+          "true_positives": 2963,
+          "false_positives": 503,
+          "false_negatives": 238,
+          "true_negatives": 43857,
+          "precision": 0.8548759376803231,
+          "recall": 0.9256482349265854,
+          "f1_score": 0.8888555572221389
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 394,
+          "true_positives": 143,
+          "false_positives": 2762,
+          "false_negatives": 251,
+          "true_negatives": 44405,
+          "precision": 0.049225473321858865,
+          "recall": 0.3629441624365482,
+          "f1_score": 0.08669293725371324
+        }
+      },
+      "confusion_matrix": [
+        [
+          38496,
+          644,
+          286,
+          2758
+        ],
+        [
+          1260,
+          483,
+          39,
+          0
+        ],
+        [
+          169,
+          65,
+          2963,
+          4
+        ],
+        [
+          70,
+          3,
+          178,
+          143
+        ]
+      ]
+    }
+  }
+}
