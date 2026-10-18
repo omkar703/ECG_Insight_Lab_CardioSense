@@ -32,7 +32,39 @@ The digital waveform machine learning laboratory (Workflow B) utilizes the **PTB
 
 ---
 
-## 2. Standard Diagnostic Taxonomy: SCP-ECG
+## 2. Single-Lead Arrhythmia Dataset: MIT-BIH Arrhythmia Database v1.0.0
+
+The single-lead beat classification laboratory (Workflow C) utilizes the **MIT-BIH Arrhythmia Database**, a standard reference dataset of ambulatory electrocardiograms released via PhysioNet.
+
+### Citation & Academic Provenance
+- **Dataset Title:** MIT-BIH Arrhythmia Database
+- **Version:** 1.0.0 (Published 2005)
+- **Authors:** George B. Moody, Roger G. Mark
+- **Persistent DOI:** [10.13026/C2F305](https://doi.org/10.13026/C2F305)
+- **PhysioNet URL:** `https://physionet.org/content/mitdb/1.0.0/`
+- **Primary Literature Reference:**
+  Moody, G. B., & Mark, R. G. (2001). *The impact of the MIT-BIH Arrhythmia Database*. IEEE Engineering in Medicine and Biology Magazine, 20(3), 45-50. [https://doi.org/10.1109/51.932724](https://doi.org/10.1109/51.932724)
+
+### Licensing & Use Terms
+- **License:** [Open Data Commons Attribution License v1.0 (ODC-By v1.0)](https://opendatacommons.org/licenses/by/1-0/)
+- **Permitted Uses:** Academic research, modification, and redistribution with explicit attribution.
+- **Attribution Requirement:** Explicit credit given to the authors, MIT-BIH database project, and PhysioNet repository.
+- **Patient Privacy:** Ambulatory Holter recordings are anonymized; record numbers represent study IDs rather than patient health identifiers.
+
+### Dataset Composition in ECG Insight Lab
+- **Total Records:** 48 half-hour two-channel ambulatory ECG recordings from 47 unique subjects.
+- **Sampling Rate & Quantization:** 360 Hz per channel; 11-bit digitization over a 10 mV dynamic range ($(ADC - 1024) / 200\,\text{mV}$).
+- **Annotations:** Approximately 110,000 expert-reviewed beat and non-beat annotations.
+- **Channel Policy:** Primary preference: `MLII` (modified limb lead II, available in 46/48 records); fallback: `V5` (available in records 102 and 104).
+- **Patient Separation & Split Strategy:**
+  - Records 201 and 202 originate from the same subject (`sub_201_202`) and are strictly co-located in the Training partition.
+  - Four paced records (`102`, `104`, `107`, `217`) are quarantined from natural arrhythmia evaluation per AAMI EC57.
+  - Partitions: Training (16 records / 15 subjects; 37,419 beats); Validation (7 records / 7 subjects; 15,725 beats); Held-Out Test (21 records / 21 subjects; 47,561 beats).
+  - Subject Overlap: Evaluated and confirmed in `tests/test_single_lead_ml.py` (0 overlapping subjects across partitions).
+
+---
+
+## 3. Standard Diagnostic Taxonomy: SCP-ECG & ANSI/AAMI EC57
 
 The diagnostic classification ontology implemented in Workflow B aligns with the international Standard Communications Protocol for Computer-Assisted Electrocardiography (**SCP-ECG**, ISO 11073-91064 / ANSI/AAMI EC71).
 
@@ -46,6 +78,14 @@ The diagnostic classification ontology implemented in Workflow B aligns with the
   5. `HYP`: Hypertrophy (2 statements, 2,649 occurrences)
 - **Licensing:** Part of the PTB-XL v1.0.3 dataset release under CC BY 4.0.
 - **Mapping Implementation:** Validated in `ecg_lab/waveform_ml/dataset.py` with zero ambiguous assignments across all evaluated folds.
+
+### Single-Lead Beat Grouping Taxonomy (MIT-BIH / Workflow C)
+- **Taxonomy Disclosure:** Project-defined 4-class beat grouping: N, S, V, Q, with ventricular fusion beats (F) merged into Q. This is not a standard five-class AAMI EC57 implementation.
+- **Classes:**
+  - `N`: Normal and bundle branch block beats (`N`, `L`, `R`, `e`, `j`)
+  - `S`: Supraventricular ectopic beats (`A`, `a`, `J`, `S`)
+  - `V`: Ventricular ectopic beats (`V`, `E`)
+  - `Q`: Fusion and other beats (`F`, `/`, `f`, `Q`). In evaluated non-paced records, 98.2% of Class Q beats are ventricular fusion beats (`F`).
 
 ---
 

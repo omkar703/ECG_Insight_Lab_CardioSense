@@ -1,10 +1,10 @@
-"""Build and execute the four professor-ready Jupyter notebooks for ECG Insight Lab (Phase 5).
+"""Build and execute the four demonstration Jupyter notebooks for ECG Insight Lab.
 
 Notebooks generated under notebooks/:
-1. 00_Project_Story_and_Architecture.ipynb
-2. 01_ECG_Image_Digitization.ipynb
-3. 02_PTBXL_Data_and_Features.ipynb
-4. 03_Model_Predictions_and_Evaluation.ipynb
+1. 00_system_architecture_and_diagnostics.ipynb
+2. 01_ecg_image_digitization.ipynb
+3. 02_ptbxl_data_and_features.ipynb
+4. 03_model_predictions_and_evaluation.ipynb
 """
 
 import sys
@@ -89,69 +89,54 @@ In the Phase 0 audit (`docs/AUDIT_REPORT.md`), a senior technical audit revealed
     ))
 
     nb.cells.append(nbf.v4.new_markdown_cell(
-r"""## 2. Chronological Phase-by-Phase Evolution
+r"""## 2. Engineering Milestones & Architectural Development
 
-The project was rebuilt from the ground up through six rigorous engineering phases:
+The platform was engineered systematically from audited baseline to validated multi-modal research suite:
 
-| Phase | Milestone | Core Achievement & Verification Evidence |
+| Milestone Area | Primary Technical Contribution | Verification Evidence |
 | :--- | :--- | :--- |
-| **Phase 0** | Technical Audit | Quarantined legacy pickle files (`legacy/`); established security, privacy, and evaluation requirements. |
-| **Phase 1** | Foundation & Security | Clean environment, editorial design tokens, and robust image validation with decompression bomb guards (`ecg_lab/validation.py`). |
-| **Phase 2** | Image Digitization | Classical morphological centroid digitizer (`ClassicalBaselineDigitizer`); synthetic 12-lead benchmark ($r=0.6932$, $\text{MAE}=0.0725$); honest relative coordinates. |
-| **Phase 3** | Waveform ML Pipeline | Official PTB-XL v1.0.3 dataset (21,799 records); zero-leakage patient-separated folds; SCP-ECG 5 superclasses; 148 deterministic signal features. |
-| **Phase 3.1** | Evaluation Audit | Corrected label mapping; audited baseline; established full Fold 10 benchmark ($N=2,198$). |
-| **Phase 3.2** | Full-Fold Training | Scaled training to all 17,418 records (Folds 1–8); tuned decision thresholds on all 2,183 records (Fold 9); achieved **0.6093 Macro F1** on Fold 10. |
-| **Phase 3.2.1** | Paired Model Comparison | Matched patient-cluster bootstrap ($B=2,000$); proved statistically significant gain ($\Delta = +0.1510$, 95% CI $[0.1343, 0.1681]$); 0/2,000 replicates non-positive. |
-| **Phase 4** | Productization & Privacy | Quiet Academic Editorial UI (`app.py`); zero-persistence in-memory upload privacy; 7-point automated diagnostics; 64 automated tests. |
-| **Phase 5** | Teaching Layer | 4 interactive notebooks; formal repository schema; portfolio README with authentic scientific figures. |
+| **Baseline Audit & Quarantine** | Formal defect audit; isolated unverified pickle weights in `legacy/`. | `docs/audit_report.md` |
+| **Image Security Architecture** | Pixel dimension limits, format validation, decompression bomb guards. | `ecg_lab/validation.py` |
+| **Optical Signal Recovery** | Classical morphological centroid digitizer with 3x4 lead segmentation. | $r=0.6932$, $\text{MAE}=0.0725$ on synthetic fixture |
+| **PhysioNet PTB-XL Waveform ML** | Patient-stratified 10-fold split (0 leakage), 148 deterministic features. | 21,799 12-lead records (100 Hz) |
+| **Full-Cohort Classification** | Multi-output Logistic Regression trained on Folds 1–8 ($N=17,418$). | Macro F1 = 0.6093 across Fold 10 ($N=2,198$) |
+| **Paired Bootstrap Evaluation** | Matched patient-cluster bootstrap resampling ($B=2,000$). | $\Delta = +0.1510$ (95% CI: $[0.1343, 0.1681]$) |
+| **Arrhythmia Classification** | Pan-Tompkins QRS detector + Balanced Random Forest on MIT-BIH. | Macro F1 = 0.5274 on 47,034 test beats |
+| **AD8232 Sensor Simulation** | 10-bit ADC transport simulation, zero-phase filtering, unit guards. | Hardware offline test suite (46 tests) |
+| **Clinical Explanations** | Groq-powered diagnostic synthesis with medical disclaimers & caching. | `ecg_lab/explanations/` |
+| **Interface & Quality Gates** | Editorial Streamlit UI with zero-persistence in-memory privacy. | 192 automated pytest checks |
 """
     ))
 
     nb.cells.append(nbf.v4.new_markdown_cell(
 r"""## 3. Core Architectural Principle: Decoupled Workflows
 
-A central contribution of this project is the **deliberate architectural separation** between Workflow A and Workflow B:
+A central contribution of this project is the **deliberate architectural separation** between Workflow A, Workflow B, and Workflow C:
 
-```text
-+-------------------------------------------------------------------------------------------------+
-|                                 ECG INSIGHT LAB ARCHITECTURE                                    |
-+-------------------------------------------------------------------------------------------------+
-|                                                                                                 |
-|   [WORKFLOW A: ECG IMAGE LAB]                          [WORKFLOW B: WAVEFORM ML LAB]            |
-|   Paper ECG Ingestion & Optical Recovery               PhysioNet PTB-XL Digital Waveform ML      |
-|                                                                                                 |
-|   +-----------------------+                            +--------------------------------+       |
-|   | Paper ECG Image / Scan|                            | PhysioNet PTB-XL v1.0.3        |       |
-|   +-----------+-----------+                            | 21,799 12-Lead Records (100 Hz)|       |
-|               |                                        +---------------+----------------+       |
-|               v                                                        |                        |
-|   +-----------------------+                                            v                        |
-|   | Image Validation Gate |                            +--------------------------------+       |
-|   | (Format, Size, Dim)   |                            | Patient-Separated Splits       |       |
-|   +-----------+-----------+                            | (Folds 1-8 / Fold 9 / Fold 10) |       |
-|               |                                        +---------------+----------------+       |
-|               v                                                        |                        |
-|   +-----------------------+                                            v                        |
-|   | 12-Lead Segmentation  |                            +--------------------------------+       |
-|   | (3x4 Clinical Bounding)                            | 148 Deterministic Features     |       |
-|   +-----------+-----------+                            +---------------+----------------+       |
-|               |                                                        |                        |
-|               v                                                        v                        |
-|   +-----------------------+                            +--------------------------------+       |
-|   | Classical Morphological|                           | Multi-Label Diagnostic Model   |       |
-|   | Centroid Digitizer    |                            | (OvR Logistic Regression)      |       |
-|   +-----------+-----------+                            +---------------+----------------+       |
-|               |                                                        |                        |
-|               v                                                        v                        |
-|   +-----------------------+                            +--------------------------------+       |
-|   | 1D Waveform Recovery  |                            | Held-Out Evaluation (Fold 10)  |       |
-|   | (Relative Coordinates)|                            | (Macro F1 = 0.6093, N=2,198)   |       |
-|   | CSV / JSON Export     |                            +--------------------------------+       |
-|   +-----------+-----------+                                                                     |
-|               |                                                                                 |
-|               X <=========== GATED SEPARATION (STRICTLY PROHIBITED) =============>              |
-|                              No Paper-to-Digital Classification Bridge                          |
-+-------------------------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    subgraph WorkflowA["Workflow A: Paper ECG Ingestion & Optical Recovery"]
+        A1["Paper ECG Strip / Scan"] --> A2["Image Validation Gate<br/>(Format, Size, Dimension Checks)"]
+        A2 --> A3["12-Lead Layout Segmentation<br/>(3x4 Bounding Grid)"]
+        A3 --> A4["Morphological Centroid Digitizer<br/>(Thresholding & Column Centroid Tracking)"]
+        A4 --> A5["1D Relative Waveform Recovery<br/>(CSV / JSON Export)"]
+    end
+
+    subgraph WorkflowB["Workflow B: 12-Lead Diagnostic ML (PTB-XL)"]
+        B1["PTB-XL v1.0.3 Calibrated Signals<br/>(21,799 Records @ 100 Hz)"] --> B2["Patient-Stratified Folds<br/>(Folds 1-8 Train, Fold 9 Val, Fold 10 Test)"]
+        B2 --> B3["148 Deterministic Signal Features<br/>(Morphology, Rhythm, Interval Statistics)"]
+        B3 --> B4["Multi-Output Logistic Regression<br/>(Validation-Tuned Decision Cutoffs)"]
+        B4 --> B5["Held-Out Benchmark Evaluation<br/>(Macro F1 = 0.6093, N=2,198)"]
+    end
+
+    subgraph WorkflowC["Workflow C: Single-Lead Arrhythmia (MIT-BIH)"]
+        C1["MIT-BIH Arrhythmia / AD8232 Simulation<br/>(Single-Lead MLII @ 360 Hz)"] --> C2["Pan-Tompkins Autonomous QRS Detector<br/>(Bandpass Filter & Moving Integrator)"]
+        C2 --> C3["Beat Segmentation & Dynamics<br/>([-200ms, +400ms] Windows)"]
+        C3 --> C4["Balanced Random Forest Classifier<br/>(100 Trees, AAMI 4-Class Mapping)"]
+        C4 --> C5["AAMI Arrhythmia Evaluation<br/>(Macro F1 = 0.5274, 47,034 Test Beats)"]
+    end
+
+    WorkflowA -.->|"Strict Architectural Boundary<br/>(Direct Paper-to-Classifier Feeding Prohibited)"| WorkflowB
 ```
 """
     ))
@@ -204,9 +189,9 @@ When presenting this work to an academic committee or professor, the following t
 ---
 
 ## 5. Summary & Next Steps
-- Continue to **[Lab 1: ECG Image Digitization](01_ECG_Image_Digitization.ipynb)** to explore optical signal recovery on synthetic benchmarks.
-- Explore **[Lab 2: PTB-XL Data & Features](02_PTBXL_Data_and_Features.ipynb)** to examine physiological signal features and patient stratification.
-- Inspect **[Lab 3: Model Predictions & Evaluation](03_Model_Predictions_and_Evaluation.ipynb)** to verify multi-label metrics and paired bootstrap confidence intervals.
+- Continue to **[Lab 1: ECG Image Digitization](01_ecg_image_digitization.ipynb)** to explore optical signal recovery on synthetic benchmarks.
+- Explore **[Lab 2: PTB-XL Data & Features](02_ptbxl_data_and_features.ipynb)** to examine physiological signal features and patient stratification.
+- Inspect **[Lab 3: Model Predictions & Evaluation](03_model_predictions_and_evaluation.ipynb)** to verify multi-label metrics and paired bootstrap confidence intervals.
 """
     ))
 
@@ -417,7 +402,7 @@ print(json.dumps({
 r"""## 5. Lab Conclusions & Academic Rationale
 1. **Optical Digitization Works on Clean Fixtures:** On standardized, high-contrast grids, classical centroid tracking reliably extracts lead morphologies ($r=0.6932$, $\text{MAE}=0.0725$).
 2. **Relative Coordinates Are Honest:** Without physical calibration bars or verified millimeter-to-pixel conversions, claiming millivolts or seconds would be scientifically dishonest.
-3. **Decoupling is Required:** These signals cannot be fed directly to the PTB-XL classifier. Proceed to **[Lab 2: PTB-XL Data & Features](02_PTBXL_Data_and_Features.ipynb)** to study calibrated digital ECG processing.
+3. **Decoupling is Required:** These signals cannot be fed directly to the PTB-XL classifier. Proceed to **[Lab 2: PTB-XL Data & Features](02_ptbxl_data_and_features.ipynb)** to study calibrated digital ECG processing.
 """
     ))
 
@@ -602,7 +587,7 @@ feat_df
 r"""## 4. Lab Conclusions
 1. **Patient Leakage is Controlled:** Verifying zero patient overlap across Folds 1–8, Fold 9, and Fold 10 prevents data leakage.
 2. **Deterministic Feature Engineering:** The 148-feature schema captures lead morphology and rhythm without black-box complexity.
-3. Continue to **[Lab 3: Model Predictions & Evaluation](03_Model_Predictions_and_Evaluation.ipynb)** to evaluate classification performance.
+3. Continue to **[Lab 3: Model Predictions & Evaluation](03_model_predictions_and_evaluation.ipynb)** to evaluate classification performance.
 """
     ))
 
@@ -734,11 +719,11 @@ pd.DataFrame(fold10_metrics)
     ))
 
     nb.cells.append(nbf.v4.new_markdown_cell(
-r"""## 3. Paired Model Comparison: Pilot vs. Full-Fold Pipeline
+r"""## 3. Paired Model Comparison: Pilot Baseline vs. Full-Cohort Pipeline
 
-In Phase 3.2.1, a paired patient-cluster bootstrap analysis was performed across the exact same Fold 10 test cohort:
-- **Phase 3.1 Pilot Model:** Trained on 240 records, thresholded on 30 records $\rightarrow$ Macro F1 $= 0.4583$.
-- **Phase 3.2 Full-Fold Model:** Trained on 17,418 records, thresholded on 2,183 records $\rightarrow$ Macro F1 $= 0.6093$.
+A paired patient-cluster bootstrap analysis was performed across the exact same Fold 10 test cohort ($N=2,198$):
+- **Pilot Baseline Model (N=240):** Trained on 240 records, thresholded on 30 records $\rightarrow$ Macro F1 $= 0.4583$.
+- **Full-Cohort Model (N=17,418):** Trained on 17,418 records, thresholded on 2,183 records $\rightarrow$ Macro F1 $= 0.6093$.
 - **Paired Macro F1 Delta:** $+0.1510$ ($95\%$ CI: $[0.1343, 0.1681]$, $\text{SE} = 0.0087$).
 """
     ))
@@ -809,10 +794,10 @@ def main():
     notebooks_dir.mkdir(parents=True, exist_ok=True)
 
     notebook_builders = [
-        ("00_Project_Story_and_Architecture.ipynb", create_notebook_00),
-        ("01_ECG_Image_Digitization.ipynb", create_notebook_01),
-        ("02_PTBXL_Data_and_Features.ipynb", create_notebook_02),
-        ("03_Model_Predictions_and_Evaluation.ipynb", create_notebook_03),
+        ("00_system_architecture_and_diagnostics.ipynb", create_notebook_00),
+        ("01_ecg_image_digitization.ipynb", create_notebook_01),
+        ("02_ptbxl_data_and_features.ipynb", create_notebook_02),
+        ("03_model_predictions_and_evaluation.ipynb", create_notebook_03),
     ]
 
     for fname, builder in notebook_builders:

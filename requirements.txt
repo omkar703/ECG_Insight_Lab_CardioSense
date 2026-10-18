@@ -60,3 +60,5 @@ watchdog==6.0.0
 websockets==17.2
 wfdb==4.3.1
 yarl==1.25.1
+groq==1.7.0
+python-dotenv==1.2.4

@@ -1,0 +1,17 @@
+{
+  "simulator_version": "1.0.0",
+  "source_type": "MITBIH",
+  "sampling_rate_hz": 360,
+  "sample_interval_micros": 2778,
+  "baseline_count": 512.0,
+  "gain_counts_per_mv": 200.0,
+  "duration_seconds": 5.0,
+  "disclaimer": "RAW SIMULATED ADC COUNTS FOR TRANSPORT/SOFTWARE TESTING ONLY \u2014 NOT REAL SENSOR ACQUISITIONS OR CALIBRATED HARDWARE TRANSFER FUNCTION. DO NOT USE FOR CLINICAL DIAGNOSTICS.",
+  "mitbih_record_id": "100",
+  "lead_name": "MLII",
+  "source_dataset": "MIT-BIH Arrhythmia Database v1.0.0",
+  "total_samples": 1800,
+  "clipping_samples": 0,
+  "min_adc": 383,
+  "max_adc": 704
+}

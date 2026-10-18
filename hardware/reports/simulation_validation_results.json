@@ -1,0 +1,265 @@
+{
+  "phase": "7.1",
+  "model_file": "artifacts/single_lead_ml/single_lead_rf_model.joblib",
+  "model_sha256": "3889a5f5ab97803da339710d4ae9fde8ea50f8e5a5ff76ed2015a0fb0b6ec8e9",
+  "model_sha256_verified": true,
+  "runs": {
+    "mitbih_100_near_lossless": {
+      "preset": "Near-lossless software round trip",
+      "source": "MIT-BIH Record 100",
+      "duration_seconds": 10.0,
+      "samples_count": 3600,
+      "adc_min": 415,
+      "adc_max": 656,
+      "clipping_samples": 0,
+      "clipping_pct": 0.0,
+      "reconstruction_max_abs_error_mv": 0.0033333333333334103,
+      "reconstruction_mae_mv": 0.0017064814814814829,
+      "detected_peaks": 13,
+      "classifiable_windows": 11,
+      "predictions_summary": {
+        "N": 11,
+        "S": 0,
+        "V": 0,
+        "Q": 0
+      },
+      "evaluation": {
+        "detector_evaluation": {
+          "n_reference": 13,
+          "n_detected": 13,
+          "true_positives": 13,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "sensitivity": 1.0,
+          "positive_predictive_value": 1.0,
+          "f1_score": 1.0,
+          "tolerance_ms": 50.0,
+          "tolerance_samples": 18
+        },
+        "classifier_evaluation": {
+          "target_classes": [
+            "N",
+            "S",
+            "V",
+            "Q"
+          ],
+          "n_samples": 11,
+          "confusion_matrix": [
+            [
+              10,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.23809523809523808,
+          "weighted_f1": 0.8658008658008658,
+          "per_class": {
+            "N": {
+              "description": "Normal / Bundle Branch Block Beat",
+              "support": 10,
+              "true_positives": 10,
+              "false_positives": 1,
+              "false_negatives": 0,
+              "true_negatives": 0,
+              "precision": 0.9090909090909091,
+              "recall": 1.0,
+              "f1_score": 0.9523809523809523
+            },
+            "S": {
+              "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+              "support": 1,
+              "true_positives": 0,
+              "false_positives": 0,
+              "false_negatives": 1,
+              "true_negatives": 10,
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1_score": 0.0
+            },
+            "V": {
+              "description": "Ventricular Ectopic Beat (VEB / PVC)",
+              "support": 0,
+              "true_positives": 0,
+              "false_positives": 0,
+              "false_negatives": 0,
+              "true_negatives": 11,
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1_score": 0.0
+            },
+            "Q": {
+              "description": "Fusion / Paced / Unclassifiable Beat",
+              "support": 0,
+              "true_positives": 0,
+              "false_positives": 0,
+              "false_negatives": 0,
+              "true_negatives": 11,
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1_score": 0.0
+            }
+          }
+        },
+        "matched_beats_count": 11,
+        "unmatched_reference_count": 0,
+        "unmatched_detection_count": 0,
+        "evaluation_note": "Post-hoc evaluation matched against reference annotations within \u00b150 ms. Ground truth annotations were NOT provided to detector or feature extractor."
+      }
+    },
+    "mitbih_100_noisy_stress": {
+      "preset": "Noisy sensor-like stress test",
+      "source": "MIT-BIH Record 100",
+      "duration_seconds": 10.0,
+      "samples_count": 3600,
+      "adc_min": 389,
+      "adc_max": 695,
+      "clipping_samples": 0,
+      "clipping_pct": 0.0,
+      "reconstruction_mae_mv": 0.10836203703703705,
+      "detected_peaks": 13,
+      "classifiable_windows": 11,
+      "predictions_summary": {
+        "N": 11,
+        "S": 0,
+        "V": 0,
+        "Q": 0
+      },
+      "evaluation": {
+        "detector_evaluation": {
+          "n_reference": 13,
+          "n_detected": 13,
+          "true_positives": 13,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "sensitivity": 1.0,
+          "positive_predictive_value": 1.0,
+          "f1_score": 1.0,
+          "tolerance_ms": 50.0,
+          "tolerance_samples": 18
+        },
+        "classifier_evaluation": {
+          "target_classes": [
+            "N",
+            "S",
+            "V",
+            "Q"
+          ],
+          "n_samples": 11,
+          "confusion_matrix": [
+            [
+              10,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "macro_f1": 0.23809523809523808,
+          "weighted_f1": 0.8658008658008658,
+          "per_class": {
+            "N": {
+              "description": "Normal / Bundle Branch Block Beat",
+              "support": 10,
+              "true_positives": 10,
+              "false_positives": 1,
+              "false_negatives": 0,
+              "true_negatives": 0,
+              "precision": 0.9090909090909091,
+              "recall": 1.0,
+              "f1_score": 0.9523809523809523
+            },
+            "S": {
+              "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+              "support": 1,
+              "true_positives": 0,
+              "false_positives": 0,
+              "false_negatives": 1,
+              "true_negatives": 10,
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1_score": 0.0
+            },
+            "V": {
+              "description": "Ventricular Ectopic Beat (VEB / PVC)",
+              "support": 0,
+              "true_positives": 0,
+              "false_positives": 0,
+              "false_negatives": 0,
+              "true_negatives": 11,
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1_score": 0.0
+            },
+            "Q": {
+              "description": "Fusion / Paced / Unclassifiable Beat",
+              "support": 0,
+              "true_positives": 0,
+              "false_positives": 0,
+              "false_negatives": 0,
+              "true_negatives": 11,
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1_score": 0.0
+            }
+          }
+        },
+        "matched_beats_count": 11,
+        "unmatched_reference_count": 0,
+        "unmatched_detection_count": 0,
+        "evaluation_note": "Post-hoc evaluation matched against reference annotations within \u00b150 ms. Ground truth annotations were NOT provided to detector or feature extractor."
+      }
+    },
+    "synthetic_fixture": {
+      "preset": "Default Synthetic Fixture",
+      "duration_seconds": 10.0,
+      "samples_count": 3600,
+      "adc_min": 475,
+      "adc_max": 692,
+      "reconstruction_mae_mv": 0.023931913684407908,
+      "detected_peaks": 12,
+      "classifiable_windows": 12,
+      "predictions_summary": {
+        "N": 12,
+        "S": 0,
+        "V": 0,
+        "Q": 0
+      }
+    }
+  }
+}

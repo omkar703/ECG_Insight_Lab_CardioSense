@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="100%" height="100%">
+  <defs>
+    <style>
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #1e293b; }
+      .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 13px; fill: #64748b; }
+      .box-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #ffffff; }
+      .pin-label { font-family: "Courier New", Courier, monospace; font-size: 13px; font-weight: bold; fill: #334155; }
+      .wire-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; }
+      .warning-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: bold; fill: #b91c1c; }
+      .warning-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 11px; fill: #7f1d1d; }
+    </style>
+    <!-- Drop Shadow Filter -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1000" height="700" fill="#f8fafc" rx="12"/>
+
+  <!-- Title Header -->
+  <text x="40" y="45" class="title">CardioSense / ECG Insight Lab — AD8232 to Arduino Uno Wiring Prototype</text>
+  <text x="40" y="68" class="subtitle">Reference Schematic: 360 Hz Single-Lead Acquisition Prototype | Phase 7 Research Release</text>
+
+  <!-- Prominent Safety Warning Banner -->
+  <g transform="translate(40, 85)">
+    <rect width="920" height="60" rx="8" fill="#fef2f2" stroke="#f87171" stroke-width="1.5"/>
+    <path d="M 25 38 L 40 12 L 55 38 Z" fill="#ef4444"/>
+    <text x="38" y="34" font-family="sans-serif" font-size="16" font-weight="bold" fill="#ffffff">!</text>
+    <text x="70" y="27" class="warning-title">CAUTION: PROTOTYPE REFERENCE ONLY — PHYSICAL HARDWARE NOT TESTED</text>
+    <text x="70" y="45" class="warning-text">VERIFY YOUR EXACT BREAKOUT &amp; BOARD PINOUT BEFORE CONNECTING. NO HUMAN ELECTRODE TEST IS AUTHORIZED BY THIS SOFTWARE-ONLY PHASE. MAINS/USB ISOLATION REQUIRED FOR BIOMEDICAL SAFETY.</text>
+  </g>
+
+  <!-- ==================== AD8232 BREAKOUT MODULE (LEFT) ==================== -->
+  <g transform="translate(60, 180)" filter="url(#shadow)">
+    <!-- Board Body -->
+    <rect width="240" height="380" rx="10" fill="#dc2626" stroke="#b91c1c" stroke-width="2"/>
+    <rect width="240" height="40" rx="10" fill="#991b1b"/>
+    <text x="120" y="26" text-anchor="middle" class="box-title">AD8232 Breakout</text>
+
+    <!-- Chip Graphic -->
+    <rect x="70" y="80" width="100" height="90" rx="4" fill="#1e293b"/>
+    <circle cx="85" cy="95" r="4" fill="#64748b"/>
+    <text x="120" y="130" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#f8fafc">AD8232</text>
+    <text x="120" y="148" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#94a3b8">ANALOG FRONT END</text>
+
+    <!-- 3.5mm Bio-impedance Jack Graphic -->
+    <rect x="15" y="60" width="30" height="40" rx="4" fill="#334155" stroke="#475569"/>
+    <circle cx="30" cy="80" r="8" fill="#0f172a"/>
+    <text x="15" y="115" font-family="sans-serif" font-size="8" fill="#ffffff">3.5mm JACK</text>
+
+    <!-- Header Pin Strip (Right Edge) -->
+    <!-- Pin 1: 3.3V -->
+    <rect x="180" y="195" width="50" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="215" cy="207" r="5" fill="#ef4444"/>
+    <text x="190" y="212" class="pin-label">3.3V</text>
+
+    <!-- Pin 2: GND -->
+    <rect x="180" y="235" width="50" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="215" cy="247" r="5" fill="#0f172a"/>
+    <text x="190" y="252" class="pin-label">GND</text>
+
+    <!-- Pin 3: OUTPUT -->
+    <rect x="180" y="275" width="50" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="215" cy="287" r="5" fill="#10b981"/>
+    <text x="183" y="292" class="pin-label">OUT</text>
+
+    <!-- Pin 4: LO- -->
+    <rect x="180" y="315" width="50" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="215" cy="327" r="5" fill="#f97316"/>
+    <text x="187" y="332" class="pin-label">LO-</text>
+
+    <!-- Pin 5: LO+ -->
+    <rect x="180" y="355" width="50" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="215" cy="367" r="5" fill="#eab308"/>
+    <text x="187" y="372" class="pin-label">LO+</text>
+
+    <!-- Pin 6: SDN -->
+    <rect x="180" y="395" width="50" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="215" cy="407" r="5" fill="#94a3b8"/>
+    <text x="187" y="412" class="pin-label">SDN</text>
+
+    <!-- Electrode Snaps Indicator (Bottom Left) -->
+    <rect x="20" y="270" width="120" height="90" rx="6" fill="#fef2f2" stroke="#fca5a5"/>
+    <text x="28" y="290" font-family="sans-serif" font-size="10" font-weight="bold" fill="#991b1b">Electrode Leads</text>
+    <text x="28" y="310" font-family="sans-serif" font-size="9" fill="#7f1d1d">RA: Right Arm (Neg)</text>
+    <text x="28" y="326" font-family="sans-serif" font-size="9" fill="#7f1d1d">LA: Left Arm (Pos)</text>
+    <text x="28" y="342" font-family="sans-serif" font-size="9" fill="#7f1d1d">RL: Right Leg (Ref)</text>
+  </g>
+
+  <!-- ==================== ARDUINO UNO R3 BOARD (RIGHT) ==================== -->
+  <g transform="translate(640, 180)" filter="url(#shadow)">
+    <!-- Board Body -->
+    <rect width="300" height="380" rx="12" fill="#0284c7" stroke="#0369a1" stroke-width="2"/>
+    <rect width="300" height="40" rx="12" fill="#0369a1"/>
+    <text x="150" y="26" text-anchor="middle" class="box-title">Arduino Uno R3</text>
+
+    <!-- USB Port -->
+    <rect x="-15" y="60" width="40" height="50" rx="3" fill="#cbd5e1" stroke="#94a3b8"/>
+    <text x="5" y="90" font-family="sans-serif" font-size="9" font-weight="bold" fill="#334155" transform="rotate(-90 5 90)">USB UART</text>
+
+    <!-- Barrel Jack -->
+    <rect x="-15" y="140" width="35" height="45" rx="3" fill="#1e293b"/>
+
+    <!-- ATmega328P DIP IC -->
+    <rect x="90" y="190" width="120" height="50" rx="4" fill="#0f172a"/>
+    <circle cx="100" cy="200" r="3" fill="#64748b"/>
+    <text x="150" y="220" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#f8fafc">ATmega328P</text>
+
+    <!-- Left Header (Power & Analog Pins) -->
+    <!-- Pin: 3.3V Power Out -->
+    <rect x="10" y="195" width="55" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="20" cy="207" r="5" fill="#ef4444"/>
+    <text x="30" y="212" class="pin-label">3.3V</text>
+
+    <!-- Pin: GND -->
+    <rect x="10" y="235" width="55" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="20" cy="247" r="5" fill="#0f172a"/>
+    <text x="30" y="252" class="pin-label">GND</text>
+
+    <!-- Pin: A0 (Analog Input) -->
+    <rect x="10" y="275" width="55" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="20" cy="287" r="5" fill="#10b981"/>
+    <text x="35" y="292" class="pin-label">A0</text>
+
+    <!-- Pin: A1-A5 (Analog) -->
+    <rect x="10" y="315" width="55" height="24" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="22" y="331" font-family="sans-serif" font-size="10" fill="#64748b">A1..A5</text>
+
+    <!-- Right Header (Digital Pins) -->
+    <!-- Pin: D11 (LO-) -->
+    <rect x="10" y="355" width="55" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="20" cy="367" r="5" fill="#f97316"/>
+    <text x="30" y="372" class="pin-label">D11</text>
+
+    <!-- Pin: D10 (LO+) -->
+    <rect x="10" y="395" width="55" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="20" cy="407" r="5" fill="#eab308"/>
+    <text x="30" y="412" class="pin-label">D10</text>
+
+    <!-- D0-D9 Header Summary -->
+    <rect x="235" y="195" width="55" height="180" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="262" y="290" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#64748b" transform="rotate(-90 262 290)">D0..D9 / D12..D13</text>
+  </g>
+
+  <!-- ==================== WIRING INTERCONNECTIONS ==================== -->
+
+  <!-- Wire 1: 3.3V Supply (Red) -->
+  <path d="M 275 387 L 460 387 L 460 387 L 660 387" fill="none" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="420" y="375" width="80" height="18" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+  <text x="460" y="388" text-anchor="middle" class="wire-label" fill="#b91c1c">3.3V Power</text>
+
+  <!-- Wire 2: Ground Return (Black) -->
+  <path d="M 275 427 L 460 427 L 460 427 L 660 427" fill="none" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="425" y="416" width="70" height="18" rx="3" fill="#f8fafc" stroke="#0f172a" stroke-width="1"/>
+  <text x="460" y="429" text-anchor="middle" class="wire-label" fill="#0f172a">GND Return</text>
+
+  <!-- Wire 3: Analog ECG Output -> A0 (Green) -->
+  <path d="M 275 467 L 400 467 L 400 467 L 660 467" fill="none" stroke="#10b981" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="400" y="456" width="120" height="18" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="460" y="469" text-anchor="middle" class="wire-label" fill="#047857">ECG Analog OUT -> A0</text>
+
+  <!-- Wire 4: LO- -> D11 (Orange) -->
+  <path d="M 275 507 L 370 507 L 370 537 L 660 537" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="405" y="527" width="110" height="18" rx="3" fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="460" y="540" text-anchor="middle" class="wire-label" fill="#c2410c">Lead-Off LO- -> D11</text>
+
+  <!-- Wire 5: LO+ -> D10 (Yellow/Amber) -->
+  <path d="M 275 547 L 350 547 L 350 577 L 660 577" fill="none" stroke="#eab308" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="405" y="567" width="110" height="18" rx="3" fill="#fefce8" stroke="#ca8a04" stroke-width="1"/>
+  <text x="460" y="580" text-anchor="middle" class="wire-label" fill="#a16207">Lead-Off LO+ -> D10</text>
+
+  <!-- Wire 6: SDN (Shutdown) - Unconnected Note -->
+  <path d="M 275 587 L 330 587" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="335" y="591" font-family="sans-serif" font-size="10" font-style="italic" fill="#64748b">SDN: Leave Unconnected</text>
+
+  <!-- Footer Specification Box -->
+  <g transform="translate(40, 610)">
+    <rect width="920" height="65" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="20" y="24" font-family="sans-serif" font-size="11" font-weight="bold" fill="#334155">Summary of Operational Specifications:</text>
+    <text x="20" y="42" font-family="sans-serif" font-size="10" fill="#64748b">1. Supply Voltage: 3.3V DC (Do NOT connect 5V to AD8232 3.3V pin). | 2. Target Sampling Rate: 360 Hz (Interval: 2,778 μs via micros()).</text>
+    <text x="20" y="56" font-family="sans-serif" font-size="10" fill="#64748b">3. ADC Range: 10-bit (0 to 1023 counts) on Arduino Pin A0. | 4. Baud Rate: 115200 baud over USB UART. | 5. Mode: Uncalibrated Research Prototype.</text>
+  </g>
+</svg>

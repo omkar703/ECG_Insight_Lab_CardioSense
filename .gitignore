@@ -1,0 +1,28 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Environments & Dependencies
+.venv/
+env/
+
+# Test & cache artifacts
+.pytest_cache/
+.coverage
+
+# Secrets and environment files
+.env
+.env.*
+*.env
+.streamlit/secrets.toml
+secrets.toml
+
+# Datasets & Large Archives (Do not commit large datasets to Git)
+data/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# System artifacts
+.DS_Store
+Thumbs.db

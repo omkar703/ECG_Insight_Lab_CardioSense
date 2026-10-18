@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  cardiosense:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cardiosense-ecg-lab:latest
+    container_name: cardiosense-app
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_ENABLE_CORS=false
+      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
+      - ECG_DATA_DIR=/app/data
+      - ECG_PTBXL_DIR=/app/data/ptb-xl
+      - ECG_MITDB_DIR=/app/data/mitdb/raw
+      - ECG_ARTIFACTS_DIR=/app/artifacts
+    volumes:
+      # Mount datasets from host to container for persistent access
+      - ./data:/app/data
+      # Mount model artifacts read-only to ensure bit-level integrity
+      - ./artifacts:/app/artifacts:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

@@ -29,6 +29,8 @@ def digitize_ecg_image(
     image_input: Union[bytes, str, Path],
     engine: str = "baseline",
     options: Optional[Dict[str, Any]] = None,
+    filename: Optional[str] = None,
+    **kwargs: Any,
 ) -> DigitizationResult:
     """Primary entry point for ECG image digitization.
 
@@ -40,12 +42,15 @@ def digitize_ecg_image(
         image_input: Raw image bytes, or a filesystem Path / string path.
         engine: "baseline" (classical native CPU) or "open-ecg" (upstream adapter).
         options: Optional configuration dictionary (e.g. samples_per_lead).
+        filename: Optional filename string for logging or format validation.
+        **kwargs: Additional optional parameters for backward compatibility.
 
     Returns:
         Structured DigitizationResult containing status, lead waveforms, explicit
         units, and metadata.
     """
     options = options or {}
+    resolved_filename = filename or kwargs.get("filename") or options.get("filename", "upload.jpg")
 
     # 1. Front-Door Validation
     if isinstance(image_input, (str, Path)):
@@ -62,7 +67,7 @@ def digitize_ecg_image(
             )
         image = Image.open(image_input)
     elif isinstance(image_input, (bytes, bytearray)):
-        val_result = validate_image_bytes(image_input, filename="upload.jpg")
+        val_result = validate_image_bytes(image_input, filename=resolved_filename)
         if not val_result.is_valid:
             return DigitizationResult(
                 status=DigitizationStatus.REJECTED,

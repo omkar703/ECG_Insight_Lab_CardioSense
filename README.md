@@ -5,7 +5,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-64%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-192%20passed-brightgreen.svg)](tests/)
 [![Design System](https://img.shields.io/badge/UI-Quiet%20Academic%20Editorial-455D4A.svg)](app.py)
 [![Model Integrity](https://img.shields.io/badge/SHA--256-55d364ed...-forestgreen.svg)](artifacts/waveform_ml/waveform_lr_model.joblib.manifest.json)
 
@@ -18,7 +18,8 @@ Electrocardiograms (ECGs) remain the diagnostic cornerstone of cardiac electroph
 **ECG Insight Lab** is an open-source, software-only research platform developed to:
 1. Systematically investigate the algorithmic feasibility, error profiles, and calibration limits of extracting continuous 1D physiological time-series from standard 12-lead paper ECG images.
 2. Establish a reproducible, transparent, leak-free benchmark for multi-label cardiac diagnostic classification on digitized waveforms from PhysioNet's public **PTB-XL v1.0.3** dataset.
-3. Provide a publication-grade, privacy-first editorial user interface for interactive inspection, diagnostics, and pedagogical demonstration.
+3. Establish an independent single-channel arrhythmia beat classification pipeline on PhysioNet's **MIT-BIH Arrhythmia Database v1.0.0** featuring an autonomous signal-based R-peak detector and simulated Holter playback (`RECORDED DATA REPLAY — NOT LIVE HARDWARE`).
+4. Provide a publication-grade, privacy-first editorial user interface for interactive inspection, diagnostics, and pedagogical demonstration.
 
 ### Non-Clinical Research Disclaimer
 > [!IMPORTANT]
@@ -49,7 +50,7 @@ All figures embedded below are genuinely produced from actual project data and r
 | ![Model Performance Metrics](docs/assets/model_evaluation_metrics.png) | ![Paired Bootstrap Distribution](docs/assets/paired_comparison_bootstrap.png) |
 | *Figure 3: Full-fold model F1 & PR-AUC vs. pilot model across 5 diagnostic superclasses.* | *Figure 4: Paired difference in Macro F1 ($\Delta = +0.1510$, $95\%$ CI $[0.1343, 0.1681]$, $B=2,000$).* |
 
-*For visual walkthroughs of the Streamlit web application, consult [docs/UI_CAPTURE_GUIDE.md](docs/UI_CAPTURE_GUIDE.md).*
+*For visual walkthroughs of the Streamlit web application, consult [docs/ui_capture_guide.md](docs/ui_capture_guide.md).*
 
 ---
 
@@ -64,28 +65,38 @@ flowchart TD
         A4 --> A5["Signal Visualization & Data Export\n(Relative Units, Unrecovered Calibration)\nCSV / JSON In-Memory Export"]
     end
 
-    subgraph DECOUPLING["Strict Architectural Boundary (Gated Decoupling)"]
+    subgraph DECOUPLING["Strict Architectural Boundaries (Decoupling)"]
         style DECOUPLING fill:#fff2f2,stroke:#d9534f,stroke-width:2px,stroke-dasharray: 5 5
-        BOUNDARY["GATED DECISION BOUNDARY\nNo Paper-to-Digital Classification Bridge\n(Prevents Spurious Domain Shift)"]
+        BOUNDARY["GATED DECISION BOUNDARY\nNo Paper-to-Digital Classification Bridge\nNo Single-Lead Heart Attack / MI Diagnosis\nNo Live Hardware Sensor Claims"]
     end
 
-    subgraph WF_B["Workflow B: Waveform ML Lab (Digital Waveform ML)"]
+    subgraph WF_B["Workflow B: Waveform ML Lab (12-Lead Waveform ML)"]
         B1["PTB-XL v1.0.3 Dataset\n(21,799 12-Lead Records, PhysioNet WFDB)"] --> B2["Patient-Clustered Folds\n(Folds 1-8: Train | Fold 9: Val | Fold 10: Test)"]
         B2 --> B3["Feature Extraction Engine\n(148 Deterministic Signal Features)"]
         B3 --> B4["Multi-Label Diagnostic Classifier\n(One-vs-Rest Logistic Regression + Validated Thresholds)"]
         B4 --> B5["Interactive Explorer & Held-Out Benchmark\n(Calibrated mV/s Viewer, Clustered Bootstrap CIs)"]
     end
 
+    subgraph WF_C["Workflow C: Single-Lead Lab (Arrhythmia Beat ML)"]
+        C1["MIT-BIH Arrhythmia Database v1.0.0\n(48 Records, 47 Patients, 360 Hz)"] --> C2["Patient-Disjoint Splits\n(16 Train | 7 Val | 21 Held-Out Test)\nRecords 201 & 202 strictly co-located"]
+        C2 --> C3["Signal-Based R-Peak Detector\n(Pan-Tompkins Filter — No Annotations at Inference)"]
+        C3 --> C4["Feature Extraction & Classifier\n(47 Descriptors + Balanced Random Forest)"]
+        C4 --> C5["Recorded Playback Simulation in Streamlit\n(RECORDED DATA REPLAY — NOT LIVE HARDWARE)"]
+    end
+
     WF_A -.->|UNVALIDATED - STRICTLY PROHIBITED| BOUNDARY
     BOUNDARY -.->|UNVALIDATED - STRICTLY PROHIBITED| WF_B
+    BOUNDARY -.->|UNVALIDATED - STRICTLY PROHIBITED| WF_C
 ```
 
 ### Architectural Tenets
 1. **Strict Subsystem Decoupling:**
    - **Workflow A (ECG Image Lab):** Ingestion, format/resolution validation, 12-lead segmentation, and 1D continuous waveform extraction. Calibration status is honestly designated as `UNRECOVERED` with `RELATIVE` amplitude units unless physical grid spacing is verified.
    - **Workflow B (Waveform ML Lab):** Digital waveform feature extraction and diagnostic classification across 5 SCP-ECG superclasses (`NORM`, `MI`, `STTC`, `CD`, `HYP`) trained and evaluated on official patient-stratified partitions.
-2. **Gated Integration Boundary:** The optical digitizer output is **not** connected to the diagnostic ML model. Unvalidated synthetic paper waveforms cannot be fed into the waveform classifier without causing uncontrolled domain shift.
-3. **Cryptographic Model Trust:** Model serialization uses SHA-256 sidecar manifests (`waveform_lr_model.joblib.manifest.json`). Untrusted legacy pickles are strictly quarantined in `legacy/` and rejected by code policy.
+   - **Workflow C (Single-Lead Beat Lab):** Single-channel beat-type classification using a project-defined 4-class beat grouping (`N`, `S`, `V`, `Q`, with ventricular fusion beats `F` merged into `Q`; not a standard five-class AAMI EC57 implementation) on MIT-BIH Holter data, autonomous Pan-Tompkins QRS detection, and simulated recorded playback.
+   - **Hardware Prototype (Phase 7 & 7.1):** Self-contained firmware, schematics, host protocol, offline simulator, and dedicated Streamlit simulation UI (`Hardware Prototype — Offline AD8232 Simulation`) under [`hardware/`](hardware/README.md). Operates completely offline with simulated 10-bit ADC transport, protocol serialization/parsing, simulator inverse conversion, visible per-beat predictions, and post-hoc reference evaluation. Raw ADC counts are never fed into ML classifiers.
+2. **Gated Integration Boundary:** Optical digitizer outputs and uncalibrated hardware ADC counts are **not** routed into either classifier, and single-lead signals are never used to predict acute coronary syndrome (MI/STTC/CD/HYP).
+3. **Cryptographic Model Trust:** Model serialization uses SHA-256 sidecar manifests (`waveform_lr_model.joblib.manifest.json`, `single_lead_rf_model.joblib.manifest.json`). Untrusted legacy pickles are strictly quarantined in `legacy/` and rejected by code policy.
 4. **Zero-Persistence Privacy:** Uploaded images and signals are processed entirely in volatile RAM buffers (`BytesIO`). No files, logs, or patient identifiers are ever written to disk or transmitted across networks.
 5. **Quiet Academic Editorial Interface:** A distraction-free visual environment designed according to research editorial standards (warm ivory `#F7F6F2`, deep charcoal `#252722`, and forest green `#455D4A`).
 
@@ -138,16 +149,88 @@ In Phase 3.2.1, a paired patient-cluster bootstrap analysis ($B = 2,000$ replica
 
 ---
 
+### Single-Lead Beat ML Benchmark (Workflow C)
+
+> [!NOTE]
+> **Taxonomy Disclosure:** Project-defined 4-class beat grouping: N, S, V, Q, with ventricular fusion beats (F) merged into Q. This is not a standard five-class AAMI EC57 implementation.<br>
+> In evaluated non-paced records, **98.2% of Class Q beats are ventricular fusion beats (`F`)** rather than unclassifiable beats. Evaluated across 21 disjoint held-out patient recordings from the MIT-BIH Arrhythmia Database v1.0.0.
+
+#### 1. Primary Benchmark: Matched-Detection Conditional Beat-Classification Metrics (N = 47,034)
+Evaluates beat classification on detected R-peaks proposed by the automated Pan-Tompkins detector, matched to reference annotations within $\pm 50\,\text{ms}$ tolerance ($\pm 18$ samples @ 360 Hz), and retained after feature-window boundary checks:
+
+- **Signal-Based Detector Performance:**
+  - **Total Reference Beats:** 47,576
+  - **Total Detected Peaks:** 47,163
+  - **True Positives (TP):** 47,048 | **False Positives (FP):** 115 | **False Negatives (FN):** 528
+  - **Detector Sensitivity:** **98.89%** | **Detector PPV:** **99.76%** | **Detector F1-Score:** **99.32%**
+- **Evaluated Detections (Feature-Valid):** **47,034 beats** (47,048 matched detections minus 14 boundary-truncated beats)
+- **Primary Accuracy Metrics:**
+  - **Macro F1-Score:** **0.5274**
+  - **Weighted F1-Score:** **0.9011**
+
+| Beat Class Grouping | True Support | Precision | Recall | F1-Score | Grouping Description |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **N** | 41,883 | 0.9592 | 0.9218 | **0.9401** | Normal / Bundle Branch Block Beats (`N`, `L`, `R`, `e`, `j`) |
+| **S** | 1,757 | 0.3555 | 0.1793 | **0.2384** | Supraventricular Ectopic Beats (`A`, `a`, `J`, `S`) |
+| **V** | 3,018 | 0.7781 | 0.9298 | **0.8472** | Ventricular Ectopic Beats (`V`, `E`) |
+| **Q** | 376 | 0.0489 | 0.2979 | **0.0840** | Ventricular Fusion (`F`) & Unclassifiable (`Q`) |
+| **Macro Average** | **47,034** | **0.5354** | **0.5822** | **0.5274** | Unweighted mean across all 4 classes |
+| **Weighted Average** | **47,034** | **0.9178** | **0.8896** | **0.9011** | Prevalence-weighted mean |
+
+> [!NOTE]
+> **Benchmark Interpretation Note:** Matched-detection conditional beat-classification metrics — classification F1 is calculated only for detector peaks matched to a reference annotation and retained after feature-window boundary checks. Detector false positives (115 peaks) and missed reference beats (542 beats, including boundary-dropped matched beats) are reported separately in detector/count-reconciliation metrics and are not included as errors in this classifier confusion matrix.
+
+#### 2. Secondary Benchmark: Annotation-Centred (Oracle) Classifier Reference
+Diagnostic reference isolating classifier feature discrimination assuming ideal QRS localization. Beat windows are centred on expert ground-truth annotation indices (47,561 valid windows after dropping 15 boundary reference annotations); **this is not an autonomous end-to-end result**:
+
+| Beat Class Grouping | Reference Support | Precision | Recall | F1-Score | Baseline F1 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **N** (Normal / BBB Beat) | 42,184 | 0.9595 | 0.9247 | **0.9418** | 0.9401 |
+| **S** (Supraventricular Ectopic / PAC) | 1,782 | 0.4035 | 0.2043 | **0.2712** | 0.0000 |
+| **V** (Ventricular Ectopic / PVC) | 3,201 | 0.7912 | 0.9222 | **0.8517** | 0.0000 |
+| **Q** (Ventricular Fusion & Other) | 394 | 0.0549 | 0.3173 | **0.0936** | 0.0000 |
+| **Macro Average** | **47,561** | **0.5523** | **0.5921** | **0.5396** | 0.2350 |
+| **Weighted Average** | **47,561** | **0.9192** | **0.9002** | **0.9036** | 0.8338 |
+
+#### 3. Beat Count Reconciliation & Key Limitations
+- **Beat Count Reconciliation:** Total reference annotations in 21 test records = $47,576$.
+  - *Oracle Benchmark ($N=47,561$):* 15 reference annotations occur too close to recording edges ($<90$ samples at start or $>649,890$ samples at end: 14 Class N, 1 Class V in Record 233) to extract a complete 200-sample window ($47,576 - 15 = 47,561$).
+  - *Detector Benchmark ($N=47,034$):* Pan-Tompkins detects 47,163 peaks; 47,048 match reference annotations within $\pm 50\,\text{ms}$. Of these, 14 fall too close to recording boundaries to extract features ($47,048 - 14 = 47,034$).
+  - *Decomposition of the 542 Unrepresented Reference Beats:* 527 non-boundary detector FNs + 1 boundary detector FN (Record 213, sample 649,992, Class N) + 14 boundary-dropped matched detections (13 Class N, 1 Class V) = **542 unrepresented reference beats**.
+    - Class N: 301 non-boundary FNs + 1 boundary FN + 13 boundary-dropped detections = **315** unrepresented beats ($42,198 - 315 = 41,883$ true support).
+    - Class S: 25 non-boundary FNs = **25** unrepresented beats ($1,782 - 25 = 1,757$ true support).
+    - Class V: 183 non-boundary FNs + 1 boundary-dropped detection = **184** unrepresented beats ($3,202 - 184 = 3,018$ true support).
+    - Class Q: 18 non-boundary FNs = **18** unrepresented beats ($394 - 18 = 376$ true support).
+    Non-boundary FNs total $301 + 25 + 183 + 18 = 527$.
+- **Severe Class Imbalance:** Class N represents ~89% of beats, which elevates Weighted F1 (~0.90) relative to Macro F1 (~0.53).
+- **Minority Class Performance:** Supraventricular ectopic beats (S: F1 = 0.2384) and Fusion/Other beats (Q: F1 = 0.0840) exhibit poor sensitivity and high false-alarm rates.
+- **Academic Replay Boundary:** Workflow C evaluates historic Holter data (1975–1979) and has not been validated on physical AD8232/ESP32 hardware or for clinical monitoring.
+
+> [!CAUTION]
+> **RECORDED DATA REPLAY — NOT LIVE HARDWARE:**<br>
+> MIT-BIH recordings are digitized Holter cassette recordings from 1975–1979. They do **not** represent live sensor acquisition from AD8232 or ESP32 hardware. Single-lead ECG signals cannot diagnose myocardial infarction or replace 12-lead clinical diagnostics.
+
+### Hardware Prototype & Offline Simulation (Planned AD8232 + Arduino Uno)
+
+A self-contained hardware engineering module is provided under [`hardware/`](hardware/README.md) for future benchtop prototyping:
+- **Firmware Sketch (`hardware/firmware/`):** Line-oriented 115,200 baud UART acquisition at nominal 360 Hz with microsecond scheduling.
+- **Editable Wiring Schematics (`hardware/diagrams/`):** Vector SVG schematic ([`ad8232_arduino_uno_wiring.svg`](hardware/diagrams/ad8232_arduino_uno_wiring.svg)) and pin mapping table.
+- **Offline Stream Simulator (`hardware/host/`):** Generates identical UART data frames from MIT-BIH records or mathematical synthetic fixtures without hardware.
+- **Signal Processing & Guards (`hardware/signal_processing/`):** Zero-phase offline filters, causal streaming filters, and calibration guardrails strictly preventing uncalibrated ADC counts from entering ML models.
+- **Biomedical Safety:** Standard USB connections lack galvanic isolation (IEC 60601-1); electrode connection to human subjects is strictly prohibited.
+
+---
+
 ## 5. Educational Teaching Labs (Jupyter Notebooks)
 
 The repository provides four interactive, pre-executed teaching notebooks under `notebooks/` designed for professor evaluations and code walkthroughs:
 
 | Notebook | Focus & Educational Content | Execution Guide |
 | :--- | :--- | :---: |
-| **`00_Project_Story_and_Architecture.ipynb`** | Historical evolution, Phase 0 audit findings, and decoupled architecture diagram. | [Open Guide](notebooks/README.md) |
-| **`01_ECG_Image_Digitization.ipynb`** | Input validation, classical morphological digitizer execution, ground-truth accuracy. | [Open Guide](notebooks/README.md) |
-| **`02_PTBXL_Data_and_Features.ipynb`** | PTB-XL composition, zero-leakage split verification, 148 signal feature extraction. | [Open Guide](notebooks/README.md) |
-| **`03_Model_Predictions_and_Evaluation.ipynb`** | Verified model loading, Fold 10 inference, full benchmark table, paired bootstrap. | [Open Guide](notebooks/README.md) |
+| **`00_system_architecture_and_diagnostics.ipynb`** | Historical evolution, baseline audit trail, and decoupled architecture diagram. | [Open Guide](notebooks/README.md) |
+| **`01_ecg_image_digitization.ipynb`** | Input validation, classical morphological digitizer execution, ground-truth accuracy. | [Open Guide](notebooks/README.md) |
+| **`02_ptbxl_data_and_features.ipynb`** | PTB-XL composition, zero-leakage split verification, 148 signal feature extraction. | [Open Guide](notebooks/README.md) |
+| **`03_model_predictions_and_evaluation.ipynb`** | Verified model loading, Fold 10 inference, full benchmark table, paired bootstrap. | [Open Guide](notebooks/README.md) |
 
 ---
 
@@ -178,7 +261,7 @@ Execute the complete test suite:
 ```bash
 pytest -v
 ```
-*Expected Result: 64 passed tests in ~4.5 seconds (100% pass rate, zero errors, zero warnings).*
+*Expected Result: 192 passed tests across the full repository (`tests/` and `hardware/tests/`).*
 
 ### Step 3: Run System Diagnostics via CLI
 Verify system environment, dataset status, and cryptographic model integrity:
@@ -187,13 +270,27 @@ python -m ecg_lab.waveform_ml.cli diagnostics
 ```
 *Expected Output: All 7 health checks report `[OK]` and system reports `OPERATIONAL`.*
 
-### Step 4: Launch the Streamlit Web Application
+### Step 4: Launch the Full-Stack Web Application
 ```bash
 streamlit run app.py
 ```
-*Open your web browser and navigate to `http://localhost:8501`.*
+*Open your web browser at `http://localhost:8501`. The web platform provides a streamlined two-part experience:*
+1. **Research Guide:** Step-by-step walkthrough of cardiac electrophysiology, noise filtration, Pan-Tompkins QRS cascade, ML architectures, and audited benchmark results.
+2. **Practical Lab:** Direct backend-connected interactive workspace to inspect continuous 12-lead voltage heatmaps, cross-lead correlation matrices, execute ML classifiers on PTB-XL records, and analyze single-lead beat morphology.
 
-### Step 5: (Optional) Run the Educational Notebooks
+### Step 5: (Production) Containerized Docker Deployment
+Run the complete application as a containerized service with mounted datasets:
+```bash
+# Using Docker Compose
+docker compose up -d --build
+
+# Or using standard Docker CLI
+docker build -t cardiosense-ecg-lab .
+docker run -d -p 8501:8501 -v "$(pwd)/data:/app/data" -v "$(pwd)/artifacts:/app/artifacts:ro" cardiosense-ecg-lab
+```
+*For detailed cloud deployment configurations (AWS, GCP, Render, Railway, Hugging Face Spaces), see [docs/deployment_guide.md](docs/deployment_guide.md).*
+
+### Step 6: (Optional) Run Educational Notebooks
 ```bash
 # Install notebook dependencies and register the kernel
 pip install -r requirements-notebooks.txt
@@ -233,29 +330,31 @@ python -m ecg_lab.waveform_ml.cli audit-paired-comparison
 
 ## 8. Repository Structure & File Schema
 
-A complete classification of tracked source code, gitignored raw datasets, and quarantined legacy artifacts is detailed in [docs/PROJECT_FILE_SCHEMA.md](docs/PROJECT_FILE_SCHEMA.md):
+A complete classification of tracked source code, gitignored raw datasets, and quarantined legacy artifacts is detailed in [docs/project_file_schema.md](docs/project_file_schema.md):
 
 ```text
 code/
 ├── app.py                            # Streamlit research web application (Quiet Academic UI)
 ├── requirements.txt                  # Production dependencies
 ├── requirements-notebooks.txt        # Optional notebook dependencies
-├── ecg_lab/                          # Core modular package
-│   ├── digitization/                 # Workflow A optical digitization subsystem
-│   └── waveform_ml/                  # Workflow B digital waveform ML subsystem
-├── notebooks/                        # 4 interactive teaching notebooks & guide
-├── tests/                            # 64 unit & integration tests across 8 suites
-├── sample_data/                      # Synthetic 12-lead benchmarks (NOT PATIENT DATA)
+├── ecg_lab/                          # Core modular package (digitization, waveform_ml, single_lead_ml, explanations)
+├── notebooks/                        # 4 computational research notebooks & guide
+├── tests/                            # 146 unit & integration tests across 14 suites
+├── hardware/                         # AD8232 + Arduino Uno prototype, simulation & 46 tests
+├── sample_data/                      # Synthetic 12-lead benchmarks & MIT-BIH sample records
 ├── docs/                             # Technical reports, audits & release specifications
-│   ├── assets/                       # Authentic scientific figures
-│   ├── AUDIT_REPORT.md               # Phase 0 technical audit report
-│   ├── MODEL_CARD.md                 # Formal research-use model card
-│   ├── DATA_SOURCES_AND_LICENSES.md  # Data provenance & software licenses
-│   ├── PROJECT_FILE_SCHEMA.md        # Full repository taxonomy
-│   └── UI_CAPTURE_GUIDE.md           # Visual walkthrough & screenshot capture guide
-├── artifacts/waveform_ml/            # Trained model (10.5 KB) & cryptographic manifest
+│   ├── assets/                       # Publication-grade authentic scientific figures
+│   ├── reports/                      # 16 formal engineering milestone reports
+│   ├── audit_report.md               # Technical baseline audit report
+│   ├── model_card.md                 # 12-lead PTB-XL model card
+│   ├── single_lead_model_card.md     # Single-lead MIT-BIH beat model card
+│   ├── data_sources_and_licenses.md  # Data provenance & software licenses
+│   ├── deployment_guide.md           # Deployment guide & containerization
+│   ├── project_file_schema.md        # Full repository taxonomy
+│   └── ui_capture_guide.md           # Visual walkthrough & UI guide
+├── artifacts/                        # Trained models (12-Lead LR, Single-Lead RF) & SHA-256 manifests
 ├── legacy/                           # Quarantined legacy pickle models (loading blocked)
-└── data/                             # [GITIGNORED] PTB-XL raw waveforms (520 MB)
+└── data/                             # [GITIGNORED] PTB-XL and MIT-BIH raw datasets
 ```
 
 ---
@@ -284,7 +383,9 @@ The application codebase and documentation are licensed under the [MIT License](
   Wagner, P., Strodthoff, N., Bousseljot, R. D., Kreiseler, D., Lunze, F. I., Samek, W., & Schaeffter, T. (2020). *PTB-XL, a large publicly available electrocardiography dataset*. Scientific Data, 7(1), 154. [https://doi.org/10.1038/s41597-020-0495-6](https://doi.org/10.1038/s41597-020-0495-6). Distributed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - **PhysioNet Repository:**  
   Goldberger, A., et al. (2000). *PhysioBank, PhysioToolkit, and PhysioNet: Components of a new research resource for complex physiologic signals*. Circulation, 101(23), e215–e220. [https://doi.org/10.1161/01.CIR.101.23.e215](https://doi.org/10.1161/01.CIR.101.23.e215).
+- **MIT-BIH Arrhythmia Database:**  
+  Moody, G. B., & Mark, R. G. (2001). *The impact of the MIT-BIH Arrhythmia Database*. IEEE Engineering in Medicine and Biology Magazine, 20(3), 45–50. [https://doi.org/10.1109/51.932724](https://doi.org/10.1109/51.932724).
 - **Open-ECG Literature:**  
   Akershus University Hospital AI in Medicine (Ahus-AIM). *Electrocardiogram-Digitization*. Evaluated under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 
-For detailed dependency licenses, see [docs/DATA_SOURCES_AND_LICENSES.md](docs/DATA_SOURCES_AND_LICENSES.md).
+For detailed dependency licenses, see [docs/data_sources_and_licenses.md](docs/data_sources_and_licenses.md).

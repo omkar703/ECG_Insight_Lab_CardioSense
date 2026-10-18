@@ -1,30 +1,30 @@
-# Educational & Demonstration Notebooks Guide
+# Computational Research & Demonstration Notebooks Guide
 
-**ECG Insight Lab / CardioSense — Phase 5 Portfolio Deliverable**  
-*Interactive teaching labs designed for professor evaluations, code walkthroughs, and pedagogical demonstrations.*
+**ECG Insight Lab / CardioSense Research Suite**  
+*Interactive computational notebooks for methodological demonstration, evaluation verification, and academic defense.*
 
 ---
 
 ## 1. Overview & Demonstration Sequence
 
-The four Jupyter notebooks in this directory provide a complete, interactive walkthrough of the ECG Insight Lab research platform. Each notebook functions as an educational lab with learning objectives, step-by-step code execution, publication-grade figures, and academic defense discussions.
+The four Jupyter notebooks in this directory provide a complete, interactive walkthrough of the computational cardiology research platform. Each notebook functions as an educational lab with clear learning objectives, step-by-step code execution, publication-grade figures, and academic defense discussions.
 
 ```text
 Sequence of Demonstration:
-00_Project_Story_and_Architecture.ipynb  --> Historical origins, audit findings, architectural decoupling
-01_ECG_Image_Digitization.ipynb          --> Optical image recovery, classical centroid baseline, relative units
-02_PTBXL_Data_and_Features.ipynb         --> PTB-XL dataset, patient stratification, 148 deterministic features
-03_Model_Predictions_and_Evaluation.ipynb --> Verified ML model inference, Fold 10 benchmark, paired bootstrap
+00_system_architecture_and_diagnostics.ipynb  --> Historical origins, audit findings, architectural decoupling
+01_ecg_image_digitization.ipynb               --> Optical image recovery, classical centroid baseline, relative units
+02_ptbxl_data_and_features.ipynb              --> PTB-XL dataset, patient stratification, 148 deterministic features
+03_model_predictions_and_evaluation.ipynb      --> Verified ML model inference, Fold 10 benchmark, paired bootstrap
 ```
 
 ### Notebook Inventory
 
 | Notebook | Focus | Primary Outputs & Figures | Expected Runtime |
 | :--- | :--- | :--- | :---: |
-| **`00_Project_Story_and_Architecture.ipynb`** | Historical evolution, Phase 0–4 audit trail, decoupled architecture | System diagnostics status table, architectural decoupling block diagram | $\approx 2\,\text{s}$ |
-| **`01_ECG_Image_Digitization.ipynb`** | Workflow A: Input validation, morphological centroid digitizer, benchmark accuracy | Input image viewer, 12-lead recovery plots, Pearson $r$ ($0.6932$) & MAE ($0.0725$), in-memory CSV/JSON | $\approx 3\,\text{s}$ |
-| **`02_PTBXL_Data_and_Features.ipynb`** | Workflow B: PTB-XL v1.0.3 composition, patient leakage verification, feature extraction | Fold sizes table ($0$ leakage), superclass prevalence chart, calibrated 12-lead mV plot, 148 feature vector | $\approx 4\,\text{s}$ |
-| **`03_Model_Predictions_and_Evaluation.ipynb`** | Workflow B: Verified model loading, Fold 10 inference, paired bootstrap comparison | SHA-256 integrity check, multi-label probability decisions, benchmark table (F1: 0.6093), bootstrap density plot | $\approx 3\,\text{s}$ |
+| **`00_system_architecture_and_diagnostics.ipynb`** | Historical evolution, baseline audit trail, decoupled architecture | System diagnostics status table, architectural decoupling block diagram | $\approx 2\,\text{s}$ |
+| **`01_ecg_image_digitization.ipynb`** | Workflow A: Input validation, morphological centroid digitizer, benchmark accuracy | Input image viewer, 12-lead recovery plots, Pearson $r$ ($0.6932$) & MAE ($0.0725$), in-memory CSV/JSON | $\approx 3\,\text{s}$ |
+| **`02_ptbxl_data_and_features.ipynb`** | Workflow B: PTB-XL v1.0.3 composition, patient leakage verification, feature extraction | Fold sizes table ($0$ leakage), superclass prevalence chart, calibrated 12-lead mV plot, 148 feature vector | $\approx 4\,\text{s}$ |
+| **`03_model_predictions_and_evaluation.ipynb`** | Workflow B: Verified model loading, Fold 10 inference, paired bootstrap comparison | SHA-256 integrity check, multi-label probability decisions, benchmark table (F1: 0.6093), bootstrap density plot | $\approx 3\,\text{s}$ |
 
 ---
 

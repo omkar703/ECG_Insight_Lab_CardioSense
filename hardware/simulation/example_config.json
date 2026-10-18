@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "simulation_profile": "mitbih_record_100_standard",
+  "description": "Standard 360 Hz offline simulation configuration mapping MIT-BIH Record 100 to simulated 10-bit Arduino Uno ADC counts.",
+  "source": {
+    "type": "mitbih",
+    "record_id": "100",
+    "preferred_lead": "MLII",
+    "duration_seconds": 10.0,
+    "fallback_to_synthetic": true
+  },
+  "signal_parameters": {
+    "nominal_sampling_rate_hz": 360,
+    "nominal_interval_micros": 2778
+  },
+  "adc_quantization": {
+    "resolution_bits": 10,
+    "min_count": 0,
+    "max_count": 1023,
+    "baseline_count": 512.0,
+    "gain_counts_per_mv": 200.0,
+    "reference_voltage_volts": 3.3
+  },
+  "fault_injection": {
+    "simulate_lead_off": false,
+    "lead_off_start_seconds": null,
+    "lead_off_duration_seconds": null
+  },
+  "output": {
+    "target_csv": "hardware/simulation/simulated_stream.csv",
+    "generate_metadata_sidecar": true
+  },
+  "safety_disclaimer": "OFFLINE PROTOTYPE SIMULATION ONLY — NOT REAL SENSOR ACQUISITIONS OR CALIBRATED HARDWARE TRANSFER FUNCTION"
+}
