@@ -34,7 +34,7 @@ Following `CardioSense_Phase_6_MITBIH_Single_Lead_ML_Prompt.md`, Phase 6 establi
    - Persisted model with SHA-256 sidecar manifest (`artifacts/single_lead_ml/single_lead_rf_model.joblib.manifest.json`).
 6. **Streamlit Single-Lead Lab & Recorded Playback Simulator:**
    - Added Workflow C navigation tab in `app.py`.
-   - Embedded mandatory warning banner: `⚠️ RECORDED DATA REPLAY — NOT LIVE HARDWARE`.
+   - Embedded mandatory warning banner: `RECORDED DATA REPLAY — NOT LIVE HARDWARE`.
    - Interactive calibrated waveform viewer, detected peak markers, AAMI class badges, heart rate estimation, and reference annotation overlay.
 7. **Automated Test Suite Expansion:**
    - Created `tests/test_single_lead_ml.py` adding 22 focused test cases.

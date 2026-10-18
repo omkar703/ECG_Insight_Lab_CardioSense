@@ -45,12 +45,12 @@ The platform is architected around three active, mathematically decoupled workfl
 
 For comprehensive evaluation by professors, admissions committees, and technical reviewers, see the dedicated research documentation:
 
-- 📄 **[Portfolio Report (docs/PORTFOLIO_REPORT.md)](docs/PORTFOLIO_REPORT.md)** — Executive overview, quantitative achievements, and engineering contributions.
-- 📐 **[System Architecture (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)** — Decoupled pipeline topology, data contracts, and safety guardrails.
-- 🔬 **[Research Methods (docs/RESEARCH_METHODS.md)](docs/RESEARCH_METHODS.md)** — Signal conditioning, feature engineering mathematics, leak-free partitioning, and bootstrap protocols.
-- 📊 **[Results & Limitations (docs/RESULTS_AND_LIMITATIONS.md)](docs/RESULTS_AND_LIMITATIONS.md)** — Full quantitative benchmarks, confusion matrices, failure modes, and honest caveats.
-- 🧪 **[Single-Lead Imbalance Experiment (docs/reports/single_lead_imbalance_experiment.md)](docs/reports/single_lead_imbalance_experiment.md)** — Controlled study on class imbalance and cost-sensitive minority boosting.
-- 📝 **[Changelog (CHANGELOG.md)](CHANGELOG.md)** — Complete chronological audit trail of architectural milestones.
+- **[Portfolio Report (docs/PORTFOLIO_REPORT.md)](docs/PORTFOLIO_REPORT.md)** — Executive overview, quantitative achievements, and engineering contributions.
+- **[System Architecture (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)** — Decoupled pipeline topology, data contracts, and safety guardrails.
+- **[Research Methods (docs/RESEARCH_METHODS.md)](docs/RESEARCH_METHODS.md)** — Signal conditioning, feature engineering mathematics, leak-free partitioning, and bootstrap protocols.
+- **[Results & Limitations (docs/RESULTS_AND_LIMITATIONS.md)](docs/RESULTS_AND_LIMITATIONS.md)** — Full quantitative benchmarks, confusion matrices, failure modes, and honest caveats.
+- **[Single-Lead Imbalance Experiment (docs/reports/single_lead_imbalance_experiment.md)](docs/reports/single_lead_imbalance_experiment.md)** — Controlled study on class imbalance and cost-sensitive minority boosting.
+- **[Changelog (CHANGELOG.md)](CHANGELOG.md)** — Complete chronological audit trail of architectural milestones.
 
 ---
 
@@ -93,7 +93,7 @@ The complete interactive research interface can be observed in real time across 
 [![Practical Lab & Live Experiment Walkthrough](docs/assets/lab_walkthrough.gif)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/lab.mp4)
 
 > [!TIP]
-> **▶ [Click here to watch the full 1080p video in GitHub native video player (`docs/assets/lab.mp4`)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/lab.mp4)**.
+> **[Click here to watch the full 1080p video in GitHub native video player (`docs/assets/lab.mp4`)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/lab.mp4)**.
 
 ---
 
@@ -103,7 +103,7 @@ The complete interactive research interface can be observed in real time across 
 [![Guided Educational Demo Walkthrough](docs/assets/demo_guide_walkthrough.gif)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/demo_guide.mp4)
 
 > [!TIP]
-> **▶ [Click here to watch the full 1080p video in GitHub native video player (`docs/assets/demo_guide.mp4`)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/demo_guide.mp4)**.
+> **[Click here to watch the full 1080p video in GitHub native video player (`docs/assets/demo_guide.mp4`)](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/blob/main/docs/assets/demo_guide.mp4)**.
 
 ---
 
