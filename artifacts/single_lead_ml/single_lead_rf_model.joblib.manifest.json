@@ -1,0 +1,309 @@
+{
+  "model_file": "single_lead_rf_model.joblib",
+  "model_sha256": "3889a5f5ab97803da339710d4ae9fde8ea50f8e5a5ff76ed2015a0fb0b6ec8e9",
+  "created_at_utc": "2026-10-17T20:10:05.798143+00:00",
+  "architecture_version": "1.0.0",
+  "feature_schema_version": "1.0.0",
+  "target_classes": [
+    "N",
+    "S",
+    "V",
+    "Q"
+  ],
+  "train_metadata": {
+    "dataset_name": "MIT-BIH Arrhythmia Database v1.0.0",
+    "dataset_citation": "Moody G, Mark R. PhysioNet, 2005. DOI: 10.13026/C2F305",
+    "dataset_license": "Open Data Commons Attribution License v1.0 (ODC-By)",
+    "train_records": [
+      "101",
+      "108",
+      "109",
+      "112",
+      "114",
+      "115",
+      "116",
+      "119",
+      "122",
+      "124",
+      "201",
+      "202",
+      "203",
+      "208",
+      "209",
+      "215"
+    ],
+    "val_records": [
+      "106",
+      "118",
+      "205",
+      "207",
+      "220",
+      "223",
+      "230"
+    ],
+    "test_records": [
+      "100",
+      "103",
+      "105",
+      "111",
+      "113",
+      "117",
+      "121",
+      "123",
+      "200",
+      "210",
+      "212",
+      "213",
+      "214",
+      "219",
+      "221",
+      "222",
+      "228",
+      "231",
+      "232",
+      "233",
+      "234"
+    ],
+    "train_samples": 37419,
+    "val_samples": 15725,
+    "test_samples": 47561,
+    "preferred_leads": [
+      "MLII",
+      "V5",
+      "V1",
+      "V2",
+      "V4"
+    ],
+    "feature_count": 47,
+    "feature_names": [
+      "pre_rr_sec",
+      "post_rr_sec",
+      "local_rr_sec",
+      "rr_ratio_pre",
+      "rr_ratio_post",
+      "amp_mean",
+      "amp_std",
+      "amp_min",
+      "amp_max",
+      "amp_peak_to_peak",
+      "amp_skewness",
+      "amp_kurtosis",
+      "amp_rms",
+      "amp_energy",
+      "zero_crossings",
+      "qrs_mean",
+      "qrs_rms",
+      "qrs_peak_to_peak",
+      "qrs_energy",
+      "qrs_energy_ratio",
+      "pre_mean",
+      "pre_rms",
+      "pre_energy",
+      "post_mean",
+      "post_rms",
+      "post_energy",
+      "post_peak_to_peak",
+      "morph_sample_0",
+      "morph_sample_1",
+      "morph_sample_2",
+      "morph_sample_3",
+      "morph_sample_4",
+      "morph_sample_5",
+      "morph_sample_6",
+      "morph_sample_7",
+      "morph_sample_8",
+      "morph_sample_9",
+      "morph_sample_10",
+      "morph_sample_11",
+      "morph_sample_12",
+      "morph_sample_13",
+      "morph_sample_14",
+      "morph_sample_15",
+      "morph_sample_16",
+      "morph_sample_17",
+      "morph_sample_18",
+      "morph_sample_19"
+    ],
+    "random_seed": 42,
+    "n_estimators": 100,
+    "max_depth": 12,
+    "validation_metrics": {
+      "target_classes": [
+        "N",
+        "S",
+        "V",
+        "Q"
+      ],
+      "n_samples": 15725,
+      "confusion_matrix": [
+        [
+          13834,
+          2,
+          155,
+          45
+        ],
+        [
+          266,
+          8,
+          97,
+          2
+        ],
+        [
+          287,
+          15,
+          976,
+          13
+        ],
+        [
+          24,
+          0,
+          1,
+          0
+        ]
+      ],
+      "macro_f1": 0.4468549802956925,
+      "weighted_f1": 0.9326958487596569,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 14036,
+          "true_positives": 13834,
+          "false_positives": 577,
+          "false_negatives": 202,
+          "true_negatives": 1112,
+          "precision": 0.9599611407952259,
+          "recall": 0.9856084354516956,
+          "f1_score": 0.9726157415544697
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 373,
+          "true_positives": 8,
+          "false_positives": 17,
+          "false_negatives": 365,
+          "true_negatives": 15335,
+          "precision": 0.32,
+          "recall": 0.021447721179624665,
+          "f1_score": 0.04020100502512563
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 1291,
+          "true_positives": 976,
+          "false_positives": 253,
+          "false_negatives": 315,
+          "true_negatives": 14181,
+          "precision": 0.7941415785191213,
+          "recall": 0.756003098373354,
+          "f1_score": 0.7746031746031746
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 25,
+          "true_positives": 0,
+          "false_positives": 60,
+          "false_negatives": 25,
+          "true_negatives": 15640,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0
+        }
+      }
+    },
+    "test_metrics": {
+      "target_classes": [
+        "N",
+        "S",
+        "V",
+        "Q"
+      ],
+      "n_samples": 47561,
+      "confusion_matrix": [
+        [
+          39006,
+          492,
+          535,
+          2151
+        ],
+        [
+          1380,
+          364,
+          38,
+          0
+        ],
+        [
+          203,
+          45,
+          2952,
+          1
+        ],
+        [
+          62,
+          1,
+          206,
+          125
+        ]
+      ],
+      "macro_f1": 0.5395782332503253,
+      "weighted_f1": 0.9035636741330682,
+      "per_class": {
+        "N": {
+          "description": "Normal / Bundle Branch Block Beat",
+          "support": 42184,
+          "true_positives": 39006,
+          "false_positives": 1645,
+          "false_negatives": 3178,
+          "true_negatives": 3732,
+          "precision": 0.9595335908095742,
+          "recall": 0.9246633794803717,
+          "f1_score": 0.9417758194000121
+        },
+        "S": {
+          "description": "Supraventricular Ectopic Beat (SVEB / PAC)",
+          "support": 1782,
+          "true_positives": 364,
+          "false_positives": 538,
+          "false_negatives": 1418,
+          "true_negatives": 45241,
+          "precision": 0.4035476718403548,
+          "recall": 0.20426487093153758,
+          "f1_score": 0.27123695976154993
+        },
+        "V": {
+          "description": "Ventricular Ectopic Beat (VEB / PVC)",
+          "support": 3201,
+          "true_positives": 2952,
+          "false_positives": 779,
+          "false_negatives": 249,
+          "true_negatives": 43581,
+          "precision": 0.7912087912087912,
+          "recall": 0.922211808809747,
+          "f1_score": 0.8517022504327756
+        },
+        "Q": {
+          "description": "Fusion / Paced / Unclassifiable Beat",
+          "support": 394,
+          "true_positives": 125,
+          "false_positives": 2152,
+          "false_negatives": 269,
+          "true_negatives": 45015,
+          "precision": 0.05489679402722881,
+          "recall": 0.31725888324873097,
+          "f1_score": 0.09359790340696368
+        }
+      }
+    },
+    "r_peak_detector_test_metrics": {
+      "total_reference_beats": 47576,
+      "total_detected_peaks": 47163,
+      "true_positives": 47048,
+      "false_positives": 115,
+      "false_negatives": 528,
+      "sensitivity": 0.9889019673785102,
+      "positive_predictive_value": 0.997561647901957,
+      "f1_score": 0.9932129323720961,
+      "tolerance_ms": 50.0
+    }
+  },
+  "trust_boundary_disclaimer": "This model artifact was produced by the documented CardioSense Phase 6 reproducible training script on MIT-BIH Arrhythmia Database v1.0.0. It is an academic single-channel beat classifier and does NOT connect to physical AD8232 hardware or predict patient diagnoses (MI/STTC/CD/HYP)."
+}

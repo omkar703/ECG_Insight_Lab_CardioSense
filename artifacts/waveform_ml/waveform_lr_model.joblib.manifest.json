@@ -1,0 +1,53 @@
+{
+  "model_file": "waveform_lr_model.joblib",
+  "model_sha256": "55d364ed57cc971167f7ad813443c249f792567e406cce4c3dd84188829328d7",
+  "created_at_utc": "2026-10-17T17:17:04.189306+00:00",
+  "architecture_version": "1.0.0",
+  "feature_schema_version": "1.0.0",
+  "target_superclasses": [
+    "NORM",
+    "MI",
+    "STTC",
+    "CD",
+    "HYP"
+  ],
+  "decision_thresholds": {
+    "NORM": 0.5,
+    "MI": 0.5,
+    "STTC": 0.55,
+    "CD": 0.55,
+    "HYP": 0.65
+  },
+  "train_metadata": {
+    "timestamp_utc": "2026-10-17T17:17:04.171674+00:00",
+    "random_seed": 42,
+    "c_param": 1.0,
+    "dataset_name": "PTB-XL v1.0.3",
+    "code_revision": "a7ac4910be5cccd3178d6784c0e0b4d414322848",
+    "training_mode": "full_fold",
+    "train_samples": 17418,
+    "train_patients": 15023,
+    "val_samples": 2183,
+    "val_patients": 1942,
+    "test_samples": 2198,
+    "test_patients": 1904,
+    "train_positive_support": {
+      "NORM": 7596,
+      "MI": 4379,
+      "STTC": 4186,
+      "CD": 3907,
+      "HYP": 2119
+    },
+    "val_positive_support": {
+      "NORM": 955,
+      "MI": 540,
+      "STTC": 528,
+      "CD": 495,
+      "HYP": 268
+    },
+    "split_integrity_verified": true,
+    "peak_rss_mb": 515.25390625,
+    "frozen_prior_to_test_evaluation": true
+  },
+  "trust_boundary_disclaimer": "This model artifact was produced by the documented CardioSense Phase 3 reproducible training script on PTB-XL v1.0.3 data. It is isolated from unverified legacy pickle models."
+}

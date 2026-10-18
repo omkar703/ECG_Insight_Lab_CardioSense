@@ -1,0 +1,48 @@
+{
+  "model_file": "waveform_lr_pilot_model.joblib",
+  "model_sha256": "850a26e38c46f5ae60af0a2157732ffed59e33b9e77f98ed63404cc85a9eb8ac",
+  "created_at_utc": "2026-10-17T16:17:01.954477+00:00",
+  "architecture_version": "1.0.0",
+  "feature_schema_version": "1.0.0",
+  "target_superclasses": [
+    "NORM",
+    "MI",
+    "STTC",
+    "CD",
+    "HYP"
+  ],
+  "decision_thresholds": {
+    "NORM": 0.8,
+    "MI": 0.30000000000000004,
+    "STTC": 0.1,
+    "CD": 0.55,
+    "HYP": 0.55
+  },
+  "train_metadata": {
+    "timestamp_utc": "2026-10-17T16:17:01.949725+00:00",
+    "random_seed": 42,
+    "c_param": 1.0,
+    "dataset_name": "PTB-XL v1.0.3",
+    "code_revision": "6a0267c94f8c29b6ca42901a8d929703d74a8c14",
+    "train_samples": 240,
+    "val_samples": 30,
+    "test_samples": 2198,
+    "test_patients": 1904,
+    "train_positive_support": {
+      "NORM": 160,
+      "MI": 29,
+      "STTC": 35,
+      "CD": 37,
+      "HYP": 18
+    },
+    "test_positive_support": {
+      "NORM": 963,
+      "MI": 550,
+      "STTC": 521,
+      "CD": 496,
+      "HYP": 262
+    },
+    "split_integrity_verified": true
+  },
+  "trust_boundary_disclaimer": "This model artifact was produced by the documented CardioSense Phase 3 reproducible training script on PTB-XL v1.0.3 data. It is isolated from unverified legacy pickle models."
+}

@@ -1,0 +1,100 @@
+{
+  "total_expected": 21799,
+  "total_hea_present": 21799,
+  "total_dat_present": 21799,
+  "total_complete_records": 21799,
+  "total_missing_records": 0,
+  "all_folds_complete": true,
+  "folds": {
+    "1": {
+      "fold": 1,
+      "expected_records": 2175,
+      "present_hea": 2175,
+      "present_dat": 2175,
+      "complete_records": 2175,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "2": {
+      "fold": 2,
+      "expected_records": 2181,
+      "present_hea": 2181,
+      "present_dat": 2181,
+      "complete_records": 2181,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "3": {
+      "fold": 3,
+      "expected_records": 2192,
+      "present_hea": 2192,
+      "present_dat": 2192,
+      "complete_records": 2192,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "4": {
+      "fold": 4,
+      "expected_records": 2174,
+      "present_hea": 2174,
+      "present_dat": 2174,
+      "complete_records": 2174,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "5": {
+      "fold": 5,
+      "expected_records": 2174,
+      "present_hea": 2174,
+      "present_dat": 2174,
+      "complete_records": 2174,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "6": {
+      "fold": 6,
+      "expected_records": 2173,
+      "present_hea": 2173,
+      "present_dat": 2173,
+      "complete_records": 2173,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "7": {
+      "fold": 7,
+      "expected_records": 2176,
+      "present_hea": 2176,
+      "present_dat": 2176,
+      "complete_records": 2176,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "8": {
+      "fold": 8,
+      "expected_records": 2173,
+      "present_hea": 2173,
+      "present_dat": 2173,
+      "complete_records": 2173,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "9": {
+      "fold": 9,
+      "expected_records": 2183,
+      "present_hea": 2183,
+      "present_dat": 2183,
+      "complete_records": 2183,
+      "missing_records": 0,
+      "is_complete": true
+    },
+    "10": {
+      "fold": 10,
+      "expected_records": 2198,
+      "present_hea": 2198,
+      "present_dat": 2198,
+      "complete_records": 2198,
+      "missing_records": 0,
+      "is_complete": true
+    }
+  }
+}

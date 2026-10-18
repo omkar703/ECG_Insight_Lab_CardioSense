@@ -1,0 +1,430 @@
+{
+  "timestamp_utc": "2026-10-17T17:17:49.303691+00:00",
+  "model_path": "artifacts/waveform_ml/waveform_lr_model.joblib",
+  "manifest_path": "artifacts/waveform_ml/waveform_lr_model.joblib.manifest.json",
+  "report_path": "artifacts/waveform_ml/benchmark_summary.md",
+  "split_stats": {
+    "train_records": 17418,
+    "val_records": 2183,
+    "test_records": 2198,
+    "train_patients": 15023,
+    "val_patients": 1942,
+    "test_patients": 1904,
+    "train_val_overlap": 0,
+    "train_test_overlap": 0,
+    "val_test_overlap": 0,
+    "split_integrity_verified": true
+  },
+  "peak_rss_mb": 515.25390625,
+  "val_thresholds": {
+    "NORM": 0.5,
+    "MI": 0.5,
+    "STTC": 0.55,
+    "CD": 0.55,
+    "HYP": 0.65
+  },
+  "baseline_val_metrics": {
+    "n_samples": 2183,
+    "macro_f1": 0.0,
+    "micro_f1": 0.0,
+    "macro_pr_auc": 0.2552450755840586,
+    "per_label": {
+      "NORM": {
+        "support": 955,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 955,
+        "true_negatives": 1228,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.4374713696747595,
+        "decision_threshold": 0.5
+      },
+      "MI": {
+        "support": 540,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 540,
+        "true_negatives": 1643,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.24736601007787448,
+        "decision_threshold": 0.5
+      },
+      "STTC": {
+        "support": 528,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 528,
+        "true_negatives": 1655,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.2418689876316995,
+        "decision_threshold": 0.5
+      },
+      "CD": {
+        "support": 495,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 495,
+        "true_negatives": 1688,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.22675217590471827,
+        "decision_threshold": 0.5
+      },
+      "HYP": {
+        "support": 268,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 268,
+        "true_negatives": 1915,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.12276683463124141,
+        "decision_threshold": 0.5
+      }
+    }
+  },
+  "baseline_test_metrics": {
+    "n_samples": 2198,
+    "macro_f1": 0.0,
+    "micro_f1": 0.0,
+    "macro_pr_auc": 0.25404913557779796,
+    "per_label": {
+      "NORM": {
+        "support": 963,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 963,
+        "true_negatives": 1235,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.4381255686988171,
+        "decision_threshold": 0.5
+      },
+      "MI": {
+        "support": 550,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 550,
+        "true_negatives": 1648,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.2502274795268426,
+        "decision_threshold": 0.5
+      },
+      "STTC": {
+        "support": 521,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 521,
+        "true_negatives": 1677,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.2370336669699727,
+        "decision_threshold": 0.5
+      },
+      "CD": {
+        "support": 496,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 496,
+        "true_negatives": 1702,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.2256596906278435,
+        "decision_threshold": 0.5
+      },
+      "HYP": {
+        "support": 262,
+        "predicted_positives": 0,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 262,
+        "true_negatives": 1936,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.1191992720655141,
+        "decision_threshold": 0.5
+      }
+    }
+  },
+  "model_val_metrics": {
+    "n_samples": 2183,
+    "macro_f1": 0.6352452861808461,
+    "micro_f1": 0.6638537271448663,
+    "macro_pr_auc": 0.6333833992442913,
+    "per_label": {
+      "NORM": {
+        "support": 955,
+        "predicted_positives": 1150,
+        "true_positives": 833,
+        "false_positives": 317,
+        "false_negatives": 122,
+        "true_negatives": 911,
+        "precision": 0.7243478260869565,
+        "recall": 0.8722513089005236,
+        "f1": 0.7914489311163895,
+        "pr_auc": 0.8097844249729309,
+        "decision_threshold": 0.5
+      },
+      "MI": {
+        "support": 540,
+        "predicted_positives": 808,
+        "true_positives": 395,
+        "false_positives": 413,
+        "false_negatives": 145,
+        "true_negatives": 1230,
+        "precision": 0.48886138613861385,
+        "recall": 0.7314814814814815,
+        "f1": 0.586053412462908,
+        "pr_auc": 0.5629710590551696,
+        "decision_threshold": 0.5
+      },
+      "STTC": {
+        "support": 528,
+        "predicted_positives": 724,
+        "true_positives": 390,
+        "false_positives": 334,
+        "false_negatives": 138,
+        "true_negatives": 1321,
+        "precision": 0.5386740331491713,
+        "recall": 0.7386363636363636,
+        "f1": 0.6230031948881788,
+        "pr_auc": 0.5874100891282289,
+        "decision_threshold": 0.55
+      },
+      "CD": {
+        "support": 495,
+        "predicted_positives": 571,
+        "true_positives": 333,
+        "false_positives": 238,
+        "false_negatives": 162,
+        "true_negatives": 1450,
+        "precision": 0.5831873905429071,
+        "recall": 0.6727272727272727,
+        "f1": 0.624765478424015,
+        "pr_auc": 0.6582424945398787,
+        "decision_threshold": 0.55
+      },
+      "HYP": {
+        "support": 268,
+        "predicted_positives": 360,
+        "true_positives": 173,
+        "false_positives": 187,
+        "false_negatives": 95,
+        "true_negatives": 1728,
+        "precision": 0.48055555555555557,
+        "recall": 0.6455223880597015,
+        "f1": 0.550955414012739,
+        "pr_auc": 0.5485089285252481,
+        "decision_threshold": 0.65
+      }
+    }
+  },
+  "model_test_metrics": {
+    "n_samples": 2198,
+    "macro_f1": 0.6092993581352231,
+    "micro_f1": 0.6392395200249338,
+    "macro_pr_auc": 0.629232937141631,
+    "per_label": {
+      "NORM": {
+        "support": 963,
+        "predicted_positives": 1168,
+        "true_positives": 817,
+        "false_positives": 351,
+        "false_negatives": 146,
+        "true_negatives": 884,
+        "precision": 0.699486301369863,
+        "recall": 0.8483904465212876,
+        "f1": 0.7667761614265604,
+        "pr_auc": 0.8128474103072462,
+        "decision_threshold": 0.5
+      },
+      "MI": {
+        "support": 550,
+        "predicted_positives": 805,
+        "true_positives": 379,
+        "false_positives": 426,
+        "false_negatives": 171,
+        "true_negatives": 1222,
+        "precision": 0.47080745341614905,
+        "recall": 0.6890909090909091,
+        "f1": 0.5594095940959408,
+        "pr_auc": 0.5468030033744941,
+        "decision_threshold": 0.5
+      },
+      "STTC": {
+        "support": 521,
+        "predicted_positives": 721,
+        "true_positives": 373,
+        "false_positives": 348,
+        "false_negatives": 148,
+        "true_negatives": 1329,
+        "precision": 0.5173370319001387,
+        "recall": 0.7159309021113244,
+        "f1": 0.6006441223832528,
+        "pr_auc": 0.5856035533754467,
+        "decision_threshold": 0.55
+      },
+      "CD": {
+        "support": 496,
+        "predicted_positives": 577,
+        "true_positives": 322,
+        "false_positives": 255,
+        "false_negatives": 174,
+        "true_negatives": 1447,
+        "precision": 0.5580589254766031,
+        "recall": 0.6491935483870968,
+        "f1": 0.6001863932898416,
+        "pr_auc": 0.6671271649129651,
+        "decision_threshold": 0.55
+      },
+      "HYP": {
+        "support": 262,
+        "predicted_positives": 354,
+        "true_positives": 160,
+        "false_positives": 194,
+        "false_negatives": 102,
+        "true_negatives": 1742,
+        "precision": 0.4519774011299435,
+        "recall": 0.6106870229007634,
+        "f1": 0.5194805194805195,
+        "pr_auc": 0.5337835537380029,
+        "decision_threshold": 0.65
+      }
+    }
+  },
+  "test_bootstrap_ci": {
+    "n_bootstraps": 1000,
+    "n_unique_patients": 1904,
+    "cluster_type": "patient_cluster",
+    "confidence_level": 0.95,
+    "macro_f1": {
+      "mean": 0.6090605930332088,
+      "ci_lower": 0.5909573536562013,
+      "ci_upper": 0.6269086299425249
+    },
+    "per_class": {
+      "NORM": {
+        "mean": 0.766829402909452,
+        "ci_lower": 0.7450782634573615,
+        "ci_upper": 0.7871952176878627
+      },
+      "MI": {
+        "mean": 0.5599200056836813,
+        "ci_lower": 0.5255463170839021,
+        "ci_upper": 0.5950687917579853
+      },
+      "STTC": {
+        "mean": 0.5997318349150548,
+        "ci_lower": 0.5672506485007804,
+        "ci_upper": 0.6315021899227158
+      },
+      "CD": {
+        "mean": 0.5995068856151825,
+        "ci_lower": 0.5616876021863244,
+        "ci_upper": 0.6394108577595806
+      },
+      "HYP": {
+        "mean": 0.5193148360426739,
+        "ci_lower": 0.4671023497754047,
+        "ci_upper": 0.5661552511415525
+      }
+    }
+  },
+  "pilot_comparison": {
+    "n_samples": 2198,
+    "macro_f1": 0.458268092010766,
+    "micro_f1": 0.47904567571809764,
+    "macro_pr_auc": 0.4447551305500232,
+    "per_label": {
+      "NORM": {
+        "support": 963,
+        "predicted_positives": 686,
+        "true_positives": 485,
+        "false_positives": 201,
+        "false_negatives": 478,
+        "true_negatives": 1034,
+        "precision": 0.706997084548105,
+        "recall": 0.5036344755970924,
+        "f1": 0.5882352941176471,
+        "pr_auc": 0.6872035374151128,
+        "decision_threshold": 0.8
+      },
+      "MI": {
+        "support": 550,
+        "predicted_positives": 851,
+        "true_positives": 272,
+        "false_positives": 579,
+        "false_negatives": 278,
+        "true_negatives": 1069,
+        "precision": 0.3196239717978848,
+        "recall": 0.49454545454545457,
+        "f1": 0.38829407566024265,
+        "pr_auc": 0.3377865776494995,
+        "decision_threshold": 0.30000000000000004
+      },
+      "STTC": {
+        "support": 521,
+        "predicted_positives": 1080,
+        "true_positives": 393,
+        "false_positives": 687,
+        "false_negatives": 128,
+        "true_negatives": 990,
+        "precision": 0.3638888888888889,
+        "recall": 0.7543186180422264,
+        "f1": 0.4909431605246721,
+        "pr_auc": 0.4502941608223279,
+        "decision_threshold": 0.1
+      },
+      "CD": {
+        "support": 496,
+        "predicted_positives": 631,
+        "true_positives": 278,
+        "false_positives": 353,
+        "false_negatives": 218,
+        "true_negatives": 1349,
+        "precision": 0.4405705229793978,
+        "recall": 0.5604838709677419,
+        "f1": 0.49334516415261753,
+        "pr_auc": 0.4729066851268138,
+        "decision_threshold": 0.55
+      },
+      "HYP": {
+        "support": 262,
+        "predicted_positives": 331,
+        "true_positives": 98,
+        "false_positives": 233,
+        "false_negatives": 164,
+        "true_negatives": 1703,
+        "precision": 0.29607250755287007,
+        "recall": 0.37404580152671757,
+        "f1": 0.3305227655986509,
+        "pr_auc": 0.27558469173636224,
+        "decision_threshold": 0.55
+      }
+    }
+  },
+  "summary_markdown": "# CardioSense Phase 3.2 Waveform ML Full-Fold Benchmark Report\n\n**Generated:** 2026-10-17 17:17:49 UTC\n\n**Dataset:** PTB-XL v1.0.3 (100 Hz WFDB)\n\n**Model:** Logistic Regression (One-vs-Rest, Balanced Class Weights, C=1.0)\n\n**Features:** 148 deterministic lead & cross-lead statistics (Version 1.0.0)\n\n**Split Statistics:** Train: 17,418 records (15,023 patients, Folds 1\u20138) | Validation: 2,183 records (1,942 patients, Fold 9) | Test: 2,198 records (1,904 patients, Fold 10, strictly held out)\n\n**Peak Memory Footprint:** 515.25 MiB RSS\n\n### Training Scale Comparison: Phase 3.1 Pilot Model vs. Phase 3.2 Full-Fold Model (Fold 10)\n\n> [!NOTE]\n> **Methodological Disclosure:** The Phase 3.1 pilot model was trained on 240 records (30 per fold, Folds 1\u20138) and thresholded on 30 records (Fold 9). The Phase 3.2 model is trained on the full permitted training partition and thresholded on the full validation partition. Both models are evaluated on the exact same Fold 10 test cohort.\n\n| Superclass | Test Support | Pilot Model F1 (N_tr=240) | Full-Fold Model F1 | Delta ($\\Delta\\text{ F1}$) | Full Precision | Full Recall | Full PR-AUC |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| **NORM** | 963 | 0.5882 | **0.7668** | +0.1785 | 0.6995 | 0.8484 | 0.8128 |\n| **MI** | 550 | 0.3883 | **0.5594** | +0.1711 | 0.4708 | 0.6891 | 0.5468 |\n| **STTC** | 521 | 0.4909 | **0.6006** | +0.1097 | 0.5173 | 0.7159 | 0.5856 |\n| **CD** | 496 | 0.4933 | **0.6002** | +0.1068 | 0.5581 | 0.6492 | 0.6671 |\n| **HYP** | 262 | 0.3305 | **0.5195** | +0.1890 | 0.4520 | 0.6107 | 0.5338 |\n| **Macro Aggregate** | 2198 | 0.4583 | **0.6093** | +0.1510 | \u2014 | \u2014 | 0.6292 |\n\n### Benchmark Comparison: Naive Baseline vs. Lightweight Model\n\n| Superclass | Support | Baseline F1 | Model F1 | Delta ($\\Delta$) | Model Precision | Model Recall | Model PR-AUC |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| **NORM** | 963 | 0.0000 | **0.7668** | +0.7668 | 0.6995 | 0.8484 | 0.8128 |\n| **MI** | 550 | 0.0000 | **0.5594** | +0.5594 | 0.4708 | 0.6891 | 0.5468 |\n| **STTC** | 521 | 0.0000 | **0.6006** | +0.6006 | 0.5173 | 0.7159 | 0.5856 |\n| **CD** | 496 | 0.0000 | **0.6002** | +0.6002 | 0.5581 | 0.6492 | 0.6671 |\n| **HYP** | 262 | 0.0000 | **0.5195** | +0.5195 | 0.4520 | 0.6107 | 0.5338 |\n| **Macro Aggregate** | 2198 | 0.0000 | **0.6093** | +0.6093 | \u2014 | \u2014 | 0.6292 |\n\n### Validation Fold 9 Evaluation (Full Cohort, N=2,183, 1,942 Patients)\n**Sample Count ($N$):** 2183 | **Macro F1:** 0.6352 | **Micro F1:** 0.6639 | **Macro PR-AUC:** 0.6334\n\n| Superclass | Support | Threshold | TP / FP / FN / TN | Precision | Recall (Sens.) | F1 Score | PR-AUC |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| **NORM** | 955 | 0.50 | 833 / 317 / 122 / 911 | 0.7243 | 0.8723 | **0.7914** | 0.8098 |\n| **MI** | 540 | 0.50 | 395 / 413 / 145 / 1230 | 0.4889 | 0.7315 | **0.5861** | 0.5630 |\n| **STTC** | 528 | 0.55 | 390 / 334 / 138 / 1321 | 0.5387 | 0.7386 | **0.6230** | 0.5874 |\n| **CD** | 495 | 0.55 | 333 / 238 / 162 / 1450 | 0.5832 | 0.6727 | **0.6248** | 0.6582 |\n| **HYP** | 268 | 0.65 | 173 / 187 / 95 / 1728 | 0.4806 | 0.6455 | **0.5510** | 0.5485 |\n\n### Held-Out Test Fold 10 Re-Evaluation (Full Cohort, N=2,198, 1,904 Patients)\n**Sample Count ($N$):** 2198 | **Macro F1:** 0.6093 | **Micro F1:** 0.6392 | **Macro PR-AUC:** 0.6292\n\n| Superclass | Support | Threshold | TP / FP / FN / TN | Precision | Recall (Sens.) | F1 Score | PR-AUC |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| **NORM** | 963 | 0.50 | 817 / 351 / 146 / 884 | 0.6995 | 0.8484 | **0.7668** | 0.8128 |\n| **MI** | 550 | 0.50 | 379 / 426 / 171 / 1222 | 0.4708 | 0.6891 | **0.5594** | 0.5468 |\n| **STTC** | 521 | 0.55 | 373 / 348 / 148 / 1329 | 0.5173 | 0.7159 | **0.6006** | 0.5856 |\n| **CD** | 496 | 0.55 | 322 / 255 / 174 / 1447 | 0.5581 | 0.6492 | **0.6002** | 0.6671 |\n| **HYP** | 262 | 0.65 | 160 / 194 / 102 / 1742 | 0.4520 | 0.6107 | **0.5195** | 0.5338 |\n\n### 95% Patient-Clustered Bootstrap Confidence Intervals (Fold 10, N=2,198, 1,904 Patients)\n**Bootstrap Resamples:** 1000 (patient_cluster, 1904 patients) | **Macro F1 (95% CI):** 0.6091 [0.5910, 0.6269]\n\n| Superclass | Bootstrap Mean F1 | 95% Confidence Interval | CI Width |\n| :--- | :--- | :--- | :--- |\n| **NORM** | 0.7668 | [0.7451, 0.7872] | 0.0421 |\n| **MI** | 0.5599 | [0.5255, 0.5951] | 0.0695 |\n| **STTC** | 0.5997 | [0.5673, 0.6315] | 0.0643 |\n| **CD** | 0.5995 | [0.5617, 0.6394] | 0.0777 |\n| **HYP** | 0.5193 | [0.4671, 0.5662] | 0.0991 |"
+}
