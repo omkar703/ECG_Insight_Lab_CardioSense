@@ -16,10 +16,6 @@
 
 **ECG Insight Lab (CardioSense)** is an open-source, software-only research platform developed to investigate reproducible signal conditioning, deterministic feature engineering, and decoupled machine learning models across public electrocardiogram benchmarks.
 
-> [!IMPORTANT]
-> **Admissions & Academic Portfolio Statement:**  
-> This project was developed as a rigorous computational biomedical engineering portfolio project demonstrating end-to-end engineering discipline: leak-free patient-disjoint cross-validation, deterministic feature pipelines, statistical uncertainty quantification via patient-clustered bootstrapping, hardware front-end simulation with safety guardrails, and automated CI verification.
-
 ### Active Core Workflows
 
 The platform is architected around three active, mathematically decoupled workflows:
@@ -33,12 +29,6 @@ The platform is architected around three active, mathematically decoupled workfl
 ### Archived Research Module: Optical Paper Digitizer
 > [!NOTE]
 > **Archival Status:** The Optical Paper Digitizer module has been relocated from the primary navigation and default user experience into an isolated, collapsible archival section. While the classical morphological trace extractor achieves $r = 0.6932$ on synthetic benchmarks, synthetic evaluations do not establish generalization to complex, wrinkled, or low-contrast clinical paper ECGs. The implementation, tests, and synthetic fixtures remain preserved for transparency and ongoing investigation.
-
-### Non-Clinical Research Disclaimer
-> [!IMPORTANT]
-> **Research Prototype Only — Not for Clinical Use:**  
-> This software is designed strictly for academic exploration and scientific methodology benchmarking. It is **not** a certified medical device (FDA 510(k), CE mark, or equivalent) and must **never** be used for clinical diagnosis, patient triage, risk stratification, or healthcare treatment decisions. Physical connections to human subjects without certified galvanic isolation (IEC 60601-1) are strictly prohibited.
-
 ---
 
 ## 2. Research Documentation Suite
@@ -272,10 +262,6 @@ Evaluated strictly on the deterministic synthetic 12-lead benchmark fixture (`sa
 | **Mean Absolute Error (MAE)** | **0.0725** (relative units) | $< 0.15$ | **PASS** |
 | **Inference Latency (CPU)** | **$pprox 210\,	ext{ms}$** | $< 2,000\,	ext{ms}$ | **PASS** |
 | **Calibration Status** | `UNRECOVERED` | Honest designation | **PASS** |
-
-> [!WARNING]
-> **Synthetic Benchmark Caveat:** This benchmark measures trace recovery mechanics on synthetic computer-generated signals. It does not establish clinical reliability on physical paper scans.
-
 ---
 
 ## 6. Educational Teaching Labs (Jupyter Notebooks)
