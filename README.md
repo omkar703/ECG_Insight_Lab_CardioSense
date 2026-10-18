@@ -54,6 +54,42 @@ All figures embedded below are genuinely produced from actual project data and r
 
 ---
 
+### Interactive Application Video Demonstrations
+
+The complete interactive research interface can be observed in real time across the two core platform modes:
+
+#### 1. Practical Lab & Live Experiment Walkthrough (`lab.mp4`)
+*Demonstrates interactive 12-lead signal exploration, zero-phase filtering and Bode response, diagnostic superclass inference, confusion matrices, single-lead MIT-BIH Holter beat classification, and LLM clinical explanations.*
+
+https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4
+
+<p align="center">
+  <video src="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4" controls="controls" width="100%" poster="docs/assets/lab_preview.png">
+    <a href="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4">▶ Play Video Walkthrough (lab.mp4)</a>
+  </video>
+</p>
+
+> [!TIP]
+> **Direct Video Playback:** Click the player above, or **[open `docs/assets/lab.mp4` directly in GitHub's native video player](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/lab.mp4)**.
+
+---
+
+#### 2. Guided Educational Demo Walkthrough (`demo_guide.mp4`)
+*Demonstrates the 9-step pedagogical walkthrough covering cardiac electrophysiology, data leakage prevention, signal conditioning, decoupled machine learning architectures, and calibrated diagnostic decision cutoffs.*
+
+https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4
+
+<p align="center">
+  <video src="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4" controls="controls" width="100%" poster="docs/assets/demo_guide_preview.png">
+    <a href="https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4">▶ Play Video Walkthrough (demo_guide.mp4)</a>
+  </video>
+</p>
+
+> [!TIP]
+> **Direct Video Playback:** Click the player above, or **[open `docs/assets/demo_guide.mp4` directly in GitHub's native video player](https://github.com/omkar703/ECG_Insight_Lab_CardioSense/raw/main/docs/assets/demo_guide.mp4)**.
+
+---
+
 ## 3. Core Architectural Principles & System Design
 
 ```mermaid
@@ -218,6 +254,15 @@ A self-contained hardware engineering module is provided under [`hardware/`](har
 - **Offline Stream Simulator (`hardware/host/`):** Generates identical UART data frames from MIT-BIH records or mathematical synthetic fixtures without hardware.
 - **Signal Processing & Guards (`hardware/signal_processing/`):** Zero-phase offline filters, causal streaming filters, and calibration guardrails strictly preventing uncalibrated ADC counts from entering ML models.
 - **Biomedical Safety:** Standard USB connections lack galvanic isolation (IEC 60601-1); electrode connection to human subjects is strictly prohibited.
+
+#### Hardware Prototype Benchtop Setup & Real-Time Serial Stream Evidence
+
+Experimental benchtop verification of the AD8232 analog front-end and real-time UART serial data transmission:
+
+| AD8232 to Arduino Uno Setup | Live ADC Waveform in Serial Plotter | AD8232 & Microcontroller Wiring Schematic |
+| :---: | :---: | :---: |
+| <img src="docs/assets/IMG_20250319_195717.jpg" alt="AD8232 Arduino Uno Setup" width="300" /> | <img src="docs/assets/IMG_20250319_195720.jpg" alt="Live ADC Stream Plotter" width="300" /> | <img src="docs/assets/IMG-20250417-WA0000.jpg" alt="AD8232 Pinout Wiring Schematic" width="300" /> |
+| *Figure 5: Physical benchtop prototype — AD8232 single-lead ECG front-end wired to Arduino Uno with active power & lead indicators.* | *Figure 6: Real-time serial acquisition on COM9 (9600 baud) displaying analog P-QRS-T complexes.* | *Figure 7: Microcontroller interface wiring schematic (3.3V, GND, Output ADC, and LO+/LO- leads-off detection).* |
 
 ---
 

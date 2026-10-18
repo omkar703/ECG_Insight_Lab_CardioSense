@@ -93,6 +93,17 @@ Refer to [`hardware/diagrams/ad8232_arduino_uno_wiring.svg`](diagrams/ad8232_ard
 
 ---
 
+### 4.1 Physical Benchtop Prototype & Real-Time Serial Evidence
+
+Photographic evidence of the physical AD8232 $\leftrightarrow$ Arduino Uno benchtop setup and real-time UART serial trace acquisition:
+
+| Physical Sensor & Microcontroller Setup | Live ADC Waveform Acquisition (COM9) | Microcontroller Pinout Interface Schematic |
+| :---: | :---: | :---: |
+| <img src="../docs/assets/IMG_20250319_195717.jpg" alt="AD8232 Arduino Uno Setup" width="280" /> | <img src="../docs/assets/IMG_20250319_195720.jpg" alt="Live ADC Stream Plotter" width="280" /> | <img src="../docs/assets/IMG-20250417-WA0000.jpg" alt="AD8232 Pinout Wiring Schematic" width="280" /> |
+| *Figure 1: AD8232 single-lead ECG front-end wired to Arduino Uno with active power & lead indicators.* | *Figure 2: Real-time serial acquisition on COM9 (9600 baud) displaying analog P-QRS-T complexes.* | *Figure 3: Microcontroller interface wiring schematic (3.3V, GND, Output ADC, and LO+/LO- leads-off).* |
+
+---
+
 ## 5. Offline Simulation & Verification (Executable Today Without Hardware)
 
 The complete software stack can be executed and validated immediately using recorded MIT-BIH recordings or synthetic fixtures.
