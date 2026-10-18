@@ -1126,7 +1126,7 @@ if st.session_state["nav_mode"] == "Guided Demo":
                 An educational and research prototype evaluating public ECG cohorts across three decoupled workflows: 12-lead multi-label pathology classification (PTB-XL), single-lead arrhythmia beat analysis (MIT-BIH), and offline AD8232 analog front-end telemetry simulation.
             </div>
             <div style='display: inline-block; background-color: #F0EFE9; border: 1px solid #DCDDD5; border-radius: 6px; padding: 6px 16px; font-size: 0.84rem; color: #6F716B; margin-bottom: 1rem;'>
-                ⚠️ <strong>Educational & Research Prototype:</strong> Not evaluated or certified by FDA/CE for medical diagnosis or clinical decision-making. Physical hardware acquisition remains untested.
+                <strong>Educational & Research Prototype:</strong> Not evaluated or certified by FDA/CE for medical diagnosis or clinical decision-making. Physical hardware acquisition remains untested.
             </div>
         </div>
         """
@@ -1867,10 +1867,10 @@ if st.session_state["nav_mode"] == "Guided Demo":
                         Institutional Quality Gates & Research Invariants
                     </div>
                     <div style='display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.82rem; color: #333;'>
-                        <div><strong>✓ Leak-Free Partition:</strong> Zero patient overlap across training and test folds</div>
-                        <div><strong>✓ Zero-Phase Filtering:</strong> θ(ω) = 0° prevents artificial ST elevation</div>
-                        <div><strong>✓ Deterministic Cutoffs:</strong> Validation-tuned decision thresholds</div>
-                        <div><strong>✓ Ephemeral Memory:</strong> Zero patient ECG signals retained on disk</div>
+                        <div><strong>Leak-Free Partition:</strong> Zero patient overlap across training and test folds</div>
+                        <div><strong>Zero-Phase Filtering:</strong> θ(ω) = 0° prevents artificial ST elevation</div>
+                        <div><strong>Deterministic Cutoffs:</strong> Validation-tuned decision thresholds</div>
+                        <div><strong>Ephemeral Memory:</strong> Zero patient ECG signals retained on disk</div>
                     </div>
                 </div>
                 """,
@@ -2429,11 +2429,11 @@ elif st.session_state["nav_mode"] == "Live Experiment":
     with tab_ad8232:
         st.markdown("### Hardware Prototype — Offline AD8232 Simulation")
         st.warning(
-            "⚠️ **Notice:** Physical hardware has not been tested. "
+            "**Notice:** Physical hardware has not been tested. "
             "The ECG, ADC readings, and reconstructed voltage on this screen are simulated."
         )
         st.info(
-            "🛡️ **Biomedical Safety:** Standard USB/microcontroller circuits lack galvanic isolation (IEC 60601-1). "
+            "**Biomedical Safety:** Standard USB/microcontroller circuits lack galvanic isolation (IEC 60601-1). "
             "Direct electrode connection to human subjects is strictly prohibited without certified medical isolation."
         )
 
@@ -2968,7 +2968,7 @@ elif st.session_state["nav_mode"] == "Live Experiment":
     with st.expander("Archived Research Module: Optical Paper Digitizer (Experimental / Deprecated)", expanded=False):
         st.markdown("### Optical Paper Digitizer (Archived / Experimental)")
         st.warning(
-            "⚠️ **Archived Research Notice:** This module was removed from primary navigation because its current benchmark "
+            "**Archived Research Notice:** This module was removed from primary navigation because its current benchmark "
             "is synthetic-only ($r=0.6932$ on synthetic mathematical waveforms) and does not establish reliable signal recovery "
             "on real-world hospital paper ECG scans. It is preserved here strictly for methodological reference and "
             "remains programmatically air-gapped from downstream machine learning models."

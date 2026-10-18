@@ -43,10 +43,10 @@ flowchart TD
 
     subgraph GATED_BOUNDARY["Gated Verification & Decoupling Boundaries"]
         style GATED_BOUNDARY fill:#fff5f5,stroke:#c53030,stroke-width:2px,stroke-dasharray: 5 5
-        GB1["AIR-GAP 1: Optical Pixel Traces ➔ NEVER Routed to ML Classifiers"]
-        GB2["AIR-GAP 2: Single-Lead Rhythms ➔ CANNOT Diagnose Acute Infarction (MI)"]
-        GB3["AIR-GAP 3: Raw ADC Counts ➔ BLOCKED from Inferences without Calibration"]
-        GB4["AIR-GAP 4: Ground Truth ➔ NEVER Accessible to Detectors at Inference"]
+        GB1["AIR-GAP 1: Optical Pixel Traces -> NEVER Routed to ML Classifiers"]
+        GB2["AIR-GAP 2: Single-Lead Rhythms -> CANNOT Diagnose Acute Infarction (MI)"]
+        GB3["AIR-GAP 3: Raw ADC Counts -> BLOCKED from Inferences without Calibration"]
+        GB4["AIR-GAP 4: Ground Truth -> NEVER Accessible to Detectors at Inference"]
     end
 
     WF1 -.-> GATED_BOUNDARY
