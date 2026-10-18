@@ -106,6 +106,7 @@ from ecg_lab.dashboard_helpers import (
     apply_clean_scientific_theme,
     load_demo_ptbxl_records,
     load_demo_mitbih_slice,
+    get_demo_playback_slice,
 )
 
 
@@ -2045,25 +2046,45 @@ elif st.session_state["nav_mode"] == "Live Experiment":
     # --------------------------------------------------------------------------
     with tab_12lead:
         db_path = Path(WF_DATA_DIR) / "ptbxl_database.csv"
-        if not db_path.is_file():
-            st.error(f"PTB-XL database file not found at `{db_path}`. Ensure dataset is mounted in `data/ptb-xl`.")
-        else:
+        data_path = Path(WF_DATA_DIR)
+        use_cloud_demo_ptb = False
+        avail_ids = []
+        meta_df = None
+        demo_recs_by_id = {}
+
+        if db_path.is_file():
             try:
                 meta_df = load_ptbxl_metadata(WF_DATA_DIR)
-                data_path = Path(WF_DATA_DIR)
                 avail_ids = [
                     eid for eid, row in meta_df.iterrows()
                     if (data_path / f"{row['filename_lr']}.hea").is_file()
                 ]
+            except Exception:
+                avail_ids = []
 
-                if not avail_ids:
-                    st.error("No 100 Hz WFDB header records found on disk in `data/ptb-xl/records100`.")
-                else:
-                    # 1. Select Data
-                    s_c1, s_c2 = st.columns([1, 2])
-                    with s_c1:
-                        fold_choice = st.selectbox("Partition Fold", ["Held-Out Test Fold (10)", "Validation Fold (9)", "Train Folds (1-8)", "All Folds"])
-                    filt_df = meta_df.loc[avail_ids]
+        if not avail_ids:
+            demo_list = load_demo_ptbxl_records()
+            if demo_list:
+                use_cloud_demo_ptb = True
+                demo_recs_by_id = {int(r["ecg_id"]): r for r in demo_list}
+                meta_df = pd.DataFrame(demo_list).set_index("ecg_id")
+                avail_ids = list(demo_recs_by_id.keys())
+                st.info(
+                    "**Cloud Demo Mode:** Displaying 5 pre-packaged PTB-XL benchmark records covering all diagnostic superclasses "
+                    "(NORM, MI, CD, STTC, HYP). Full 21,837-record database requires local disk mounting in `data/ptb-xl`."
+                )
+
+        if not avail_ids or meta_df is None:
+            st.error(f"PTB-XL database file not found at `{db_path}` and demo fixtures unavailable.")
+        else:
+            try:
+                # 1. Select Data
+                s_c1, s_c2 = st.columns([1, 2])
+                with s_c1:
+                    fold_options = ["Held-Out Test Fold (10)"] if use_cloud_demo_ptb else ["Held-Out Test Fold (10)", "Validation Fold (9)", "Train Folds (1-8)", "All Folds"]
+                    fold_choice = st.selectbox("Partition Fold", fold_options)
+                filt_df = meta_df.loc[avail_ids]
+                if not use_cloud_demo_ptb:
                     if fold_choice == "Held-Out Test Fold (10)":
                         filt_df = filt_df[filt_df["strat_fold"] == 10]
                     elif fold_choice == "Validation Fold (9)":
@@ -2071,14 +2092,20 @@ elif st.session_state["nav_mode"] == "Live Experiment":
                     elif fold_choice == "Train Folds (1-8)":
                         filt_df = filt_df[filt_df["strat_fold"].isin(range(1, 9))]
 
-                    with s_c2:
-                        def fmt_ptb_rec(eid: int) -> str:
-                            r = filt_df.loc[eid]
-                            sc = ", ".join(r["diagnostic_superclasses"]) if r["diagnostic_superclasses"] else "Unmapped"
-                            return f"Record #{eid:05d} [Fold {r['strat_fold']}] — Pt #{r['patient_id']} ({sc})"
-                        selected_eid = st.selectbox("Select Patient Record", options=filt_df.index.tolist(), format_func=fmt_ptb_rec)
+                with s_c2:
+                    def fmt_ptb_rec(eid: int) -> str:
+                        r = filt_df.loc[eid]
+                        sc = ", ".join(r["diagnostic_superclasses"]) if r["diagnostic_superclasses"] else "Unmapped"
+                        suffix = " [Pre-packaged Demo]" if use_cloud_demo_ptb else ""
+                        return f"Record #{int(eid):05d} [Fold {r['strat_fold']}] — Pt #{r['patient_id']} ({sc}){suffix}"
+                    selected_eid = st.selectbox("Select Patient Record", options=filt_df.index.tolist(), format_func=fmt_ptb_rec)
 
-                    rec_row = filt_df.loc[selected_eid]
+                rec_row = filt_df.loc[selected_eid]
+                if use_cloud_demo_ptb:
+                    d_rec = demo_recs_by_id[int(selected_eid)]
+                    raw_sig = np.array(d_rec["signal_mv"], dtype=np.float32)
+                    rec_meta = {"fs": int(d_rec.get("fs", 100)), "sig_len": len(raw_sig), "sig_name": d_rec.get("lead_names", WF_LEAD_NAMES)}
+                else:
                     rec_path = data_path / str(rec_row["filename_lr"])
                     raw_sig, rec_meta = read_wfdb_record(rec_path)
 
@@ -2223,20 +2250,39 @@ elif st.session_state["nav_mode"] == "Live Experiment":
         )
         st.caption(f"Research Notice: {DISCLAIMER_SINGLE_LEAD_RESEARCH}")
 
+        mit_recs = []
         try:
             mit_recs = get_available_records()
-            if not mit_recs:
-                st.error("MIT-BIH records not found at `data/mitdb`. Please check storage path.")
-            else:
+        except Exception:
+            mit_recs = []
+
+        use_demo_mit = False
+        if not mit_recs:
+            demo_mit_dict = load_demo_mitbih_slice()
+            if demo_mit_dict:
+                use_demo_mit = True
+                mit_recs = ["100 (Cloud Demo)"]
+                st.info(
+                    "**Cloud Demo Mode:** Displaying pre-packaged MIT-BIH benchmark record #100 (Lead MLII, 360 Hz). "
+                    "Full 48-record database requires local disk mounting in `data/mitdb`."
+                )
+
+        if not mit_recs:
+            st.error("MIT-BIH records not found at `data/mitdb` and demo fixtures unavailable.")
+        else:
+            try:
                 c_sel1, c_sel2, c_sel3 = st.columns(3)
                 with c_sel1:
                     sel_m = st.selectbox("MIT-BIH Record", options=mit_recs, index=0, key="sel_mit")
                 with c_sel2:
-                    start_s = st.number_input("Window Start (seconds)", 0.0, 1750.0, 10.0, 5.0)
+                    start_s = st.number_input("Window Start (seconds)", 0.0, 1750.0 if not use_demo_mit else 0.0, 10.0 if not use_demo_mit else 0.0, 5.0 if not use_demo_mit else 1.0, disabled=use_demo_mit)
                 with c_sel3:
-                    dur_s = st.selectbox("Duration (seconds)", [5.0, 10.0, 20.0, 30.0], index=1)
+                    dur_s = st.selectbox("Duration (seconds)", [5.0, 10.0, 20.0, 30.0] if not use_demo_mit else [10.0], index=1 if not use_demo_mit else 0, disabled=use_demo_mit)
 
-                pb_res = get_playback_slice(record_id=sel_m, start_second=start_s, duration_seconds=dur_s)
+                if use_demo_mit:
+                    pb_res = get_demo_playback_slice()
+                else:
+                    pb_res = get_playback_slice(record_id=sel_m, start_second=start_s, duration_seconds=dur_s)
 
                 with st.expander("Filter & Pan-Tompkins Parameters", expanded=False):
                     f1, f2, f3, f4 = st.columns(4)
@@ -2374,8 +2420,8 @@ elif st.session_state["nav_mode"] == "Live Experiment":
                         unsafe_allow_html=True,
                     )
 
-        except Exception as e:
-            st.error(f"Error accessing MIT-BIH recordings: {e}")
+            except Exception as e:
+                st.error(f"Error accessing MIT-BIH recordings: {e}")
 
     # --------------------------------------------------------------------------
     # Tab 3: Hardware Prototype AD8232
@@ -2419,7 +2465,11 @@ elif st.session_state["nav_mode"] == "Live Experiment":
         default_drift = preset_info.get("baseline_wander_amplitude_mv", 0.0)
         default_hum = preset_info.get("mains_hum_amplitude_mv", 0.0)
 
-        avail_recs = get_available_records()
+        avail_recs = []
+        try:
+            avail_recs = get_available_records()
+        except Exception:
+            avail_recs = []
 
         if sim_source_type == "MIT-BIH recorded ECG":
             c_m1, c_m2, c_m3 = st.columns(3)
@@ -2480,25 +2530,62 @@ elif st.session_state["nav_mode"] == "Live Experiment":
                 try:
                     # 1. Source Signal
                     if sim_source_type == "MIT-BIH recorded ECG":
-                        rec_obj, all_anns = load_record_with_annotations(sel_sim_rec)
-                        fs = rec_obj.sampling_rate_hz
-                        start_idx = int(sim_start_sec * fs)
-                        n_samp = int(sim_duration_sec * fs)
-                        end_idx = min(len(rec_obj.signal_mv), start_idx + n_samp)
-                        src_signal_mv = rec_obj.signal_mv[start_idx:end_idx]
-                        lead_used = rec_obj.lead_name
+                        if not avail_recs or "100" in str(sel_sim_rec):
+                            try:
+                                rec_obj, all_anns = load_record_with_annotations(sel_sim_rec)
+                                fs = rec_obj.sampling_rate_hz
+                                start_idx = int(sim_start_sec * fs)
+                                n_samp = int(sim_duration_sec * fs)
+                                end_idx = min(len(rec_obj.signal_mv), start_idx + n_samp)
+                                src_signal_mv = rec_obj.signal_mv[start_idx:end_idx]
+                                lead_used = rec_obj.lead_name
+                                ref_anns = [a for a in all_anns if start_idx <= a.sample_index < end_idx]
+                                slice_ref_anns = [
+                                    BeatAnnotation(
+                                        sample_index=a.sample_index - start_idx,
+                                        original_symbol=a.original_symbol,
+                                        aami_class=a.aami_class,
+                                        time_seconds=(a.sample_index - start_idx) / float(fs),
+                                    )
+                                    for a in ref_anns
+                                ]
+                            except Exception:
+                                demo_dict = load_demo_mitbih_slice()
+                                if demo_dict:
+                                    fs = int(demo_dict["sampling_rate_hz"])
+                                    src_signal_mv = np.array(demo_dict["signal_mv"], dtype=np.float64)
+                                    lead_used = demo_dict.get("lead_name", "MLII")
+                                    slice_ref_anns = [
+                                        BeatAnnotation(
+                                            sample_index=ann["sample_index"],
+                                            original_symbol=ann["symbol"],
+                                            aami_class=ann["aami_class"],
+                                            time_seconds=ann["time_seconds"],
+                                        )
+                                        for ann in demo_dict.get("reference_annotations", [])
+                                    ]
+                                else:
+                                    raise
+                        else:
+                            rec_obj, all_anns = load_record_with_annotations(sel_sim_rec)
+                            fs = rec_obj.sampling_rate_hz
+                            start_idx = int(sim_start_sec * fs)
+                            n_samp = int(sim_duration_sec * fs)
+                            end_idx = min(len(rec_obj.signal_mv), start_idx + n_samp)
+                            src_signal_mv = rec_obj.signal_mv[start_idx:end_idx]
+                            lead_used = rec_obj.lead_name
 
-                        # Reference annotations in this slice (offset relative to slice start)
-                        ref_anns = [a for a in all_anns if start_idx <= a.sample_index < end_idx]
-                        slice_ref_anns = [
-                            BeatAnnotation(
-                                sample_index=a.sample_index - start_idx,
-                                original_symbol=a.original_symbol,
-                                aami_class=a.aami_class,
-                                time_seconds=(a.sample_index - start_idx) / float(fs),
-                            )
-                            for a in ref_anns
-                        ]
+                            # Reference annotations in this slice (offset relative to slice start)
+                            ref_anns = [a for a in all_anns if start_idx <= a.sample_index < end_idx]
+                            slice_ref_anns = [
+                                BeatAnnotation(
+                                    sample_index=a.sample_index - start_idx,
+                                    original_symbol=a.original_symbol,
+                                    aami_class=a.aami_class,
+                                    time_seconds=(a.sample_index - start_idx) / float(fs),
+                                )
+                                for a in ref_anns
+                            ]
                     else:
                         fs = 360
                         src_signal_mv = generate_synthetic_ecg(
